@@ -62,6 +62,12 @@ export default function DashboardLayout({
                   Users
                 </Link>
               )}
+              <Link
+                href="/dashboard/settings"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                Settings
+              </Link>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
