@@ -12,7 +12,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should handle missing Authorization header', () => {
-      const authHeader = undefined;
+      const authHeader = undefined as string | undefined;
       const hasBearer = authHeader?.startsWith('Bearer ');
 
       expect(hasBearer).toBeFalsy();
