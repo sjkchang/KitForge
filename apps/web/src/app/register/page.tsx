@@ -34,9 +34,11 @@ export default function RegisterPage() {
         email,
         password,
         name,
+        callbackURL: `${window.location.origin}/dashboard`, // Redirect here after email verification
       });
 
-      // Redirect to dashboard on success
+      // Redirect to dashboard after successful registration
+      // User will see a verification banner there
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
