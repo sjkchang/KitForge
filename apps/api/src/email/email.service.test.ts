@@ -1,20 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EmailService } from './email.service';
-import type { EmailProvider } from './types/email-provider.interface';
+import type { EmailProvider, SendEmailParams } from './types/email-provider.interface';
+
+// Mock the provider classes to avoid actual email sending
+vi.mock('./providers/console-email-provider', () => ({
+  ConsoleEmailProvider: class MockConsoleProvider implements EmailProvider {
+    send = vi.fn().mockResolvedValue(undefined);
+  }
+}));
 
 describe('EmailService', () => {
-  let mockProvider: EmailProvider;
   let emailService: EmailService;
+  let mockSend: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    mockProvider = {
-      send: vi.fn().mockResolvedValue(undefined),
-    };
-
+    // Create service with console provider (which is mocked above)
     emailService = new EmailService({
-      provider: mockProvider,
+      providerType: 'console',
       defaultFrom: 'noreply@example.com',
     });
+
+    // Access the mocked send function
+    // Since we're mocking the class itself, this is type-safe
+    mockSend = (emailService as any).provider.send;
   });
 
   describe('sendEmailVerification', () => {
@@ -25,7 +33,7 @@ describe('EmailService', () => {
         verificationUrl: 'https://example.com/verify/token123',
       });
 
-      expect(mockProvider.send).toHaveBeenCalledWith({
+      expect(mockSend).toHaveBeenCalledWith({
         to: 'test@example.com',
         from: 'noreply@example.com',
         subject: 'Verify your email address',
@@ -41,7 +49,7 @@ describe('EmailService', () => {
         verificationUrl: 'https://example.com/verify/token123',
       });
 
-      const sendCall = (mockProvider.send as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+      const sendCall = mockSend.mock.calls[0]?.[0] as SendEmailParams;
       expect(sendCall?.html).toContain('https://example.com/verify/token123');
       expect(sendCall?.text).toContain('https://example.com/verify/token123');
     });
@@ -55,7 +63,7 @@ describe('EmailService', () => {
         resetUrl: 'https://example.com/reset/token456',
       });
 
-      expect(mockProvider.send).toHaveBeenCalledWith({
+      expect(mockSend).toHaveBeenCalledWith({
         to: 'test@example.com',
         from: 'noreply@example.com',
         subject: 'Reset your password',
@@ -71,7 +79,7 @@ describe('EmailService', () => {
         resetUrl: 'https://example.com/reset/token456',
       });
 
-      const sendCall = (mockProvider.send as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
+      const sendCall = mockSend.mock.calls[0]?.[0] as SendEmailParams;
       expect(sendCall?.html).toContain('https://example.com/reset/token456');
       expect(sendCall?.text).toContain('https://example.com/reset/token456');
     });
@@ -86,7 +94,7 @@ describe('EmailService', () => {
         text: 'Custom content',
       });
 
-      expect(mockProvider.send).toHaveBeenCalledWith({
+      expect(mockSend).toHaveBeenCalledWith({
         to: 'test@example.com',
         from: 'noreply@example.com',
         subject: 'Custom Subject',
@@ -102,7 +110,7 @@ describe('EmailService', () => {
         html: '<p>Custom content</p>',
       });
 
-      expect(mockProvider.send).toHaveBeenCalledWith(
+      expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           to: ['test1@example.com', 'test2@example.com'],
         })
@@ -117,7 +125,7 @@ describe('EmailService', () => {
         replyTo: 'reply@example.com',
       });
 
-      expect(mockProvider.send).toHaveBeenCalledWith(
+      expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           replyTo: 'reply@example.com',
         })

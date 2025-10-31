@@ -5,15 +5,8 @@ export type { EmailProvider, SendEmailParams } from './types/email-provider.inte
 export { ConsoleEmailProvider } from './providers/console-email-provider';
 export { ResendEmailProvider } from './providers/resend-email-provider';
 
-// Factory
-export {
-  createEmailProvider,
-  type EmailProviderType,
-  type CreateEmailProviderOptions,
-} from './email-provider.factory';
-
 // Service
-export { EmailService, type EmailServiceConfig } from './email.service';
+export { EmailService, type EmailServiceConfig, type EmailProviderType } from './email.service';
 
 // Templates
 export {

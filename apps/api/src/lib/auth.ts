@@ -3,7 +3,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { jwt } from 'better-auth/plugins';
 import { createDatabase } from '@kit/database';
 import * as schema from '@kit/database/schema';
-import { getEmailService } from '../services';
+import { services } from '../services/service-registry';
 
 function createAuth() {
     const databaseUrl = process.env.DATABASE_URL;
@@ -28,11 +28,9 @@ function createAuth() {
             enabled: true,
             autoSignIn: true,
             sendResetPassword: async ({ user, url }) => {
-                const emailService = getEmailService();
-
                 // Send password reset email
                 // URL points to API's reset endpoint, then redirects to frontend
-                await emailService.sendPasswordReset({
+                await services.email.sendPasswordReset({
                     to: user.email,
                     userName: user.name || '',
                     resetUrl: url,
@@ -44,11 +42,9 @@ function createAuth() {
             autoSignInAfterVerification: true, // Auto sign in after verification
             expiresIn: 86400, // 24 hours in seconds
             sendVerificationEmail: async ({ user, url }) => {
-                const emailService = getEmailService();
-
                 // URL is already correct - it points to API's verify endpoint
                 // After verification, Better Auth will redirect to the callbackURL
-                await emailService.sendEmailVerification({
+                await services.email.sendEmailVerification({
                     to: user.email,
                     userName: user.name || '',
                     verificationUrl: url,

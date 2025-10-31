@@ -185,40 +185,99 @@ kit/
 
 ## Key Architectural Patterns
 
-### 1. Dependency Injection (Simple Factory Pattern)
+### 1. Service Registry Pattern (Dependency Injection)
 
+We use a **Service Registry** pattern for managing application services. This provides centralized service management with lazy initialization and easy testing.
+
+**Location:** `apps/api/src/services/`
+
+**File Structure:**
+```
+services/
+├── registry.ts           # Generic ServiceRegistry class
+├── types.ts             # Services interface definition
+└── service-registry.ts  # Service registration & exports
+```
+
+**Usage:**
 ```typescript
-// apps/api/src/app.ts
-export function createApp() {
-  const env = process.env;
-  const isTest = env.NODE_ENV === 'test';
+// Import and use services directly
+import { services } from './services/service-registry';
 
-  // 1. Create infrastructure
-  const db = isTest ? null : createDatabase(env.DATABASE_URL!);
+// Clean, ergonomic API
+await services.email.sendEmailVerification({
+  to: 'user@example.com',
+  userName: 'John',
+  verificationUrl: 'https://...',
+});
 
-  // 2. Create repositories (environment-based)
-  const userRepository = isTest || !db
-    ? new InMemoryUserRepository()
-    : new DrizzleUserRepository(db);
+// Or destructure for convenience
+const { email } = services;
+await email.sendPasswordReset({ ... });
+```
 
-  // 3. Create services
-  const emailService = new EmailService({
-    provider: isTest ? 'console' : 'resend',
-  });
+**How it works:**
 
-  // 4. Register routes with dependencies
-  const app = new OpenAPIHono();
-  app.route('/users', userRoutes({ userRepository, emailService }));
+1. **Define service interface** (`services/types.ts`):
+```typescript
+import type { EmailService } from '../email/email.service';
 
-  return app;
+export interface Services {
+  email: EmailService;
+  // Future services:
+  // sms: SmsService;
+  // storage: StorageService;
 }
 ```
 
-**Key points:**
-- Simple factory function, no DI framework
-- Environment-based selection (test vs production)
-- Dependencies passed as function arguments
-- Easy to mock for testing
+2. **Register services** (`services/service-registry.ts`):
+```typescript
+export function registerServices(): void {
+  registry.register('email', () => {
+    return new EmailService({
+      providerType: process.env.EMAIL_PROVIDER || 'console',
+      resendApiKey: process.env.RESEND_API_KEY,
+      defaultFrom: process.env.EMAIL_FROM || 'noreply@localhost.com',
+    });
+  });
+}
+
+// Export services with auto-registration
+export const services = servicesProxy;
+```
+
+3. **Auto-registration:** Services register automatically on first access via Proxy
+
+**Testing:**
+```typescript
+import { configureServices, resetServices } from './services/service-registry';
+
+beforeEach(() => {
+  // Override services for testing
+  configureServices({
+    email: mockEmailService,
+  });
+});
+
+afterEach(() => {
+  resetServices(); // Clear instances
+});
+```
+
+**Key Benefits:**
+- **Ergonomic API:** Import once, use anywhere with `services.email`
+- **Lazy initialization:** Services created only when first accessed
+- **Type-safe:** Full TypeScript autocomplete and type checking
+- **Centralized:** All service registration in one place
+- **Testable:** Easy to mock with `configureServices()`
+- **Scalable:** Simple pattern for adding new services
+
+**Adding a New Service:**
+
+1. Create the service class (e.g., `sms/sms.service.ts`)
+2. Add to `Services` interface in `services/types.ts`
+3. Register in `registerServices()` in `services/service-registry.ts`
+4. Use anywhere: `services.sms.send(...)`
 
 ### 2. Entity + Repository Pattern
 

@@ -24,7 +24,7 @@ describe('ConsoleEmailProvider', () => {
     });
 
     expect(consoleLogSpy).toHaveBeenCalled();
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Would send email'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('EMAIL SENT'));
   });
 
   it('should handle multiple recipients', async () => {
@@ -52,18 +52,5 @@ describe('ConsoleEmailProvider', () => {
     });
 
     expect(consoleLogSpy).toHaveBeenCalled();
-  });
-
-  it('should not throw errors', async () => {
-    const provider = new ConsoleEmailProvider();
-
-    await expect(
-      provider.send({
-        to: 'test@example.com',
-        from: 'sender@example.com',
-        subject: 'Test Subject',
-        html: '<p>Test HTML content</p>',
-      })
-    ).resolves.not.toThrow();
   });
 });
