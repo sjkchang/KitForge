@@ -12,7 +12,7 @@ import {
     UnauthorizedErrorSchema,
     ForbiddenErrorSchema,
     UserSchema,
-} from '@kit/validation';
+} from './schemas';
 
 interface OpenAPISpec {
     openapi: string;

@@ -13,33 +13,9 @@ export interface paths {
         };
         /**
          * Health check
-         * @description Check if the API is running
+         * @description Check if the API is running and responding to requests.
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description API is healthy */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @enum {string} */
-                            status: "ok";
-                            /** Format: date-time */
-                            timestamp: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["healthCheck"];
         put?: never;
         post?: never;
         delete?: never;
@@ -57,54 +33,17 @@ export interface paths {
         };
         /**
          * Get current user
-         * @description Get the currently authenticated user
+         * @description Returns the currently authenticated user's profile information including role and email verification status.
+         *
+         *     **Use Cases:**
+         *     - Display user profile in UI
+         *     - Check user role for client-side authorization
+         *     - Verify email verification status
+         *
+         *     **Authentication:**
+         *     Requires a valid Bearer token in the Authorization header.
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Current user */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            user: {
-                                id: string;
-                                name: string;
-                                /** Format: email */
-                                email: string;
-                                emailVerified: boolean;
-                                image: string | null;
-                                role: string;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getCurrentUser"];
         put?: never;
         post?: never;
         delete?: never;
@@ -122,78 +61,18 @@ export interface paths {
         };
         /**
          * Get all users
-         * @description Get all users (admin only)
+         * @description Retrieve a list of all registered users in the system.
+         *
+         *     **Requirements:**
+         *     - Admin role required
+         *     - Valid authentication token
+         *
+         *     **Use Cases:**
+         *     - User management dashboard
+         *     - System administration
+         *     - Analytics and reporting
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of all users */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            users: {
-                                id: string;
-                                name: string;
-                                /** Format: email */
-                                email: string;
-                                emailVerified: boolean;
-                                image: string | null;
-                                role: string;
-                                /** Format: date-time */
-                                createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            details?: unknown;
-                        };
-                    };
-                };
-                /** @description Forbidden - Admin access required */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            details?: unknown;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error: string;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getAllUsers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -213,4 +92,262 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    healthCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description API is healthy and operational */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "status": "ok",
+                     *       "timestamp": "2025-01-15T10:30:00.000Z"
+                     *     }
+                     */
+                    "application/json": {
+                        /**
+                         * @description Health status of the API
+                         * @enum {string}
+                         */
+                        status: "ok";
+                        /**
+                         * Format: date-time
+                         * @description ISO 8601 timestamp of the health check
+                         */
+                        timestamp: string;
+                    };
+                };
+            };
+        };
+    };
+    getCurrentUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved current user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "user": {
+                     *         "id": "550e8400-e29b-41d4-a716-446655440000",
+                     *         "name": "John Doe",
+                     *         "email": "john.doe@example.com",
+                     *         "emailVerified": true,
+                     *         "image": "https://api.example.com/avatars/john.jpg",
+                     *         "role": "user",
+                     *         "createdAt": "2025-01-15T10:30:00.000Z",
+                     *         "updatedAt": "2025-01-15T10:30:00.000Z"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Current authenticated user */
+                        user: {
+                            /** @description Unique identifier for the user (UUID v4) */
+                            id: string;
+                            /** @description User's full name */
+                            name: string;
+                            /**
+                             * Format: email
+                             * @description User's email address (must be unique)
+                             */
+                            email: string;
+                            /** @description Whether the user has verified their email address */
+                            emailVerified: boolean;
+                            /** @description URL to the user's profile image (null if not set) */
+                            image: string | null;
+                            /** @description User's role in the system (user, admin) */
+                            role: string;
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 timestamp of when the user was created
+                             */
+                            createdAt: string;
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 timestamp of when the user was last updated
+                             */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+            /** @description Authentication required - No valid session or token provided */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "Authentication required",
+                     *       "code": "UNAUTHORIZED"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Error message */
+                        error: string;
+                        /** @description Error code */
+                        code: string;
+                    };
+                };
+            };
+        };
+    };
+    getAllUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved list of all users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "users": [
+                     *         {
+                     *           "id": "550e8400-e29b-41d4-a716-446655440000",
+                     *           "name": "John Doe",
+                     *           "email": "john.doe@example.com",
+                     *           "emailVerified": true,
+                     *           "image": "https://api.example.com/avatars/john.jpg",
+                     *           "role": "user",
+                     *           "createdAt": "2025-01-15T10:30:00.000Z",
+                     *           "updatedAt": "2025-01-15T10:30:00.000Z"
+                     *         },
+                     *         {
+                     *           "id": "123e4567-e89b-12d3-a456-426614174000",
+                     *           "name": "Jane Admin",
+                     *           "email": "jane.admin@example.com",
+                     *           "emailVerified": true,
+                     *           "image": null,
+                     *           "role": "admin",
+                     *           "createdAt": "2025-01-10T08:15:00.000Z",
+                     *           "updatedAt": "2025-01-14T16:20:00.000Z"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Array of all users in the system */
+                        users: {
+                            /** @description Unique identifier for the user (UUID v4) */
+                            id: string;
+                            /** @description User's full name */
+                            name: string;
+                            /**
+                             * Format: email
+                             * @description User's email address (must be unique)
+                             */
+                            email: string;
+                            /** @description Whether the user has verified their email address */
+                            emailVerified: boolean;
+                            /** @description URL to the user's profile image (null if not set) */
+                            image: string | null;
+                            /** @description User's role in the system (user, admin) */
+                            role: string;
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 timestamp of when the user was created
+                             */
+                            createdAt: string;
+                            /**
+                             * Format: date-time
+                             * @description ISO 8601 timestamp of when the user was last updated
+                             */
+                            updatedAt: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Authentication required - No valid session or token provided */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "Authentication required",
+                     *       "code": "UNAUTHORIZED"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Error message */
+                        error: string;
+                        /** @description Error code */
+                        code: string;
+                    };
+                };
+            };
+            /** @description Forbidden - Admin role required to access this endpoint */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "Admin access required",
+                     *       "code": "FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Error message */
+                        error: string;
+                        /** @description Error code */
+                        code: string;
+                    };
+                };
+            };
+            /** @description Internal server error - Failed to fetch users from database */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": "Failed to fetch users",
+                     *       "code": "INTERNAL_ERROR"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Human-readable error message */
+                        error: string;
+                        /** @description Machine-readable error code */
+                        code?: string;
+                        /** @description Additional error details */
+                        details?: unknown;
+                    };
+                };
+            };
+        };
+    };
+}

@@ -126,14 +126,15 @@ A professional, production-ready SaaS starter kit built as a TypeScript monorepo
 kit/
 ├── apps/
 │   ├── api/          # Hono backend (HTTP + OpenAPI)
+│   │   └── src/
+│   │       └── schemas/     # Backend Zod schemas for OpenAPI
 │   ├── web/          # Next.js frontend (App Router)
 │   └── marketing/    # Astro marketing site
 ├── packages/
-│   ├── @kit/validation      # Zod schemas + constants
 │   ├── @kit/database        # DB client + migrations
 │   ├── @kit/auth            # Better Auth config
 │   ├── @kit/authorization   # CASL abilities
-│   ├── @kit/api-client      # Generated OpenAPI client
+│   ├── @kit/api-client      # Generated OpenAPI client (type-safe)
 │   └── @kit/config          # Shared configs
 ├── docs/            # All documentation
 │   ├── REQUIREMENTS.md
@@ -326,7 +327,7 @@ export class DrizzleUserRepository {
 ### 3. Type-Safe API Client Flow
 
 ```
-1. Define Zod schema in @kit/validation
+1. Define Zod schema in apps/api/src/schemas
    ↓
 2. Use schema in API route with .openapi()
    ↓
@@ -336,13 +337,13 @@ export class DrizzleUserRepository {
    ↓
 5. TypeScript types generated in @kit/api-client
    ↓
-6. Frontend uses type-safe client
+6. Frontend uses type-safe client (no shared validators needed!)
 ```
 
 **Example:**
 ```typescript
-// 1. Validation schema
-// packages/validation/src/user.ts
+// 1. Backend validation schema
+// apps/api/src/schemas/user.ts
 export const CreateUserInput = z.object({
   email: z.string().email(),
   name: z.string(),
@@ -904,11 +905,12 @@ import { z } from 'zod';
 import { Hono } from 'hono';
 
 // 2. Internal packages
-import { CreateUserInput } from '@kit/validation';
 import { defineAbilitiesFor } from '@kit/authorization';
+import { createApiClient } from '@kit/api-client';
 
 // 3. Relative imports (same app)
 import { UserRepository } from '../repositories/user.repository';
+import { CreateUserInput } from '../schemas/user';
 import type { User } from '../entities/user.entity';
 ```
 
@@ -929,7 +931,7 @@ import type { User } from '../entities/user.entity';
 pnpm build
 
 # Or build specific package
-pnpm --filter @kit/validation build
+pnpm --filter @kit/database build
 ```
 
 **Issue: Types not updating after OpenAPI change**
@@ -1045,8 +1047,8 @@ What else did we consider and why not?
 ```json
 {
   "dependencies": {
-    "@kit/validation": "workspace:*",
-    "@kit/database": "workspace:*"
+    "@kit/database": "workspace:*",
+    "@kit/api-client": "workspace:*"
   }
 }
 ```
@@ -1064,7 +1066,7 @@ What else did we consider and why not?
 **Add dependency:**
 ```bash
 # Add to specific package
-pnpm --filter @kit/validation add zod
+pnpm --filter @kit/database add drizzle-orm
 
 # Add to workspace root
 pnpm add -Dw turbo

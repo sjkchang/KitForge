@@ -124,14 +124,6 @@ kit/
 │       └── astro.config.mjs
 │
 ├── packages/
-│   ├── @kit/validation/          # Zod schemas for validation
-│   │   ├── src/
-│   │   │   ├── user.ts          # User validation schemas
-│   │   │   ├── auth.ts          # Auth validation schemas
-│   │   │   ├── subscription.ts  # Subscription schemas
-│   │   │   └── constants.ts     # Shared constants (roles, enums)
-│   │   └── package.json
-│   │
 │   ├── @kit/database/            # Database client & migrations
 │   │   ├── src/
 │   │   │   ├── client.ts        # Postgres client setup
@@ -214,11 +206,6 @@ kit/
 ## Package Justifications
 
 ### Why Each Package is External
-
-**`@kit/validation`**
-- **Used by:** API (validation + OpenAPI), Web (form validation), Marketing (forms)
-- **Purpose:** Single source of truth for validation rules
-- **Justification:** Ensures client and server validate identically
 
 **`@kit/database`**
 - **Used by:** API (all data), Web (Better Auth + optional Server Components)
@@ -322,9 +309,11 @@ export class InMemoryUserRepository {
 ### Data Flow
 
 ```
-Validation Schema (@kit/validation)
+Backend Validation Schema (apps/api/src/schemas)
          ↓
-    API Route (validates input)
+    API Route (validates input + generates OpenAPI spec)
+         ↓
+    Generated API Client (@kit/api-client) → Frontend (type-safe)
          ↓
     Service Layer (business logic)
          ↓
@@ -347,7 +336,7 @@ Validation Schema (@kit/validation)
 
 ### User Roles
 
-Initial roles (defined in `@kit/validation/constants.ts`):
+Initial roles (defined in database schema and enforced by backend):
 - `anon` - Unauthenticated users
 - `user` - Authenticated users (free tier)
 - `premium` - Premium subscription tier

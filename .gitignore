@@ -10,10 +10,13 @@ build/
 .turbo/
 .astro/
 out/
+*.tsbuildinfo
 
 # Testing
 coverage/
 .nyc_output/
+*.test.js.snap
+**/__snapshots__/
 
 # Environment variables
 .env
@@ -26,6 +29,9 @@ coverage/
 *.swp
 *.swo
 *~
+.sublime-project
+.sublime-workspace
+.vim/
 
 # OS
 .DS_Store
@@ -49,3 +55,15 @@ tmp/
 
 # Drizzle
 drizzle/
+
+# Package manager
+.pnpm-store/
+.yarn/
+.npm/
+
+# Next.js
+.vercel/
+*.trace
+
+# Turborepo
+.turbo/

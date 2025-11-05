@@ -15,7 +15,7 @@ export async function getApiClient() {
 
   return createApiClient({
     baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
-    token: session?.session?.token,
+    token: session?.data?.session?.token,
   });
 }
 
