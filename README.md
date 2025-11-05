@@ -85,6 +85,8 @@ pnpm --filter @kit/web dev      # Web on http://localhost:3000
 Visit:
 - **Web app**: http://localhost:3000
 - **API health**: http://localhost:3001/health
+- **API documentation**: http://localhost:3001/docs
+- **OpenAPI spec**: http://localhost:3001/openapi.json
 - **Better Auth endpoints**: http://localhost:3001/api/auth/*
 
 ## Project Structure
@@ -117,6 +119,9 @@ pnpm db:migrate             # Run pending migrations
 pnpm db:studio              # Open Drizzle Studio (database GUI)
 pnpm db:seed                # Seed admin user
 
+# API Client
+pnpm generate:client        # Generate TypeScript client from OpenAPI spec
+
 # Package-specific
 pnpm --filter @kit/api dev      # Start Hono API server
 pnpm --filter @kit/web dev      # Start Next.js frontend
@@ -128,6 +133,7 @@ pnpm --filter @kit/database test # Run schema validation tests
 - [Requirements](./REQUIREMENTS.md) - Project requirements and roadmap
 - [Architecture](./docs/ARCHITECTURE.md) - System design and patterns
 - [Development Guide](./docs/BETTER-CLAUDE.md) - Development workflow
+- [OpenAPI & API Client](./docs/OPENAPI.md) - API documentation and type-safe client usage
 
 ## Tech Stack
 
