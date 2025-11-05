@@ -1,6 +1,6 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { jwt } from 'better-auth/plugins';
+import { jwt, openAPI } from 'better-auth/plugins';
 import { createDatabase } from '@kit/database';
 import * as schema from '@kit/database/schema';
 import { services } from '../services/service-registry';
@@ -28,8 +28,6 @@ function createAuth() {
             enabled: true,
             autoSignIn: true,
             sendResetPassword: async ({ user, url }) => {
-                // Send password reset email
-                // URL points to API's reset endpoint, then redirects to frontend
                 await services.email.sendPasswordReset({
                     to: user.email,
                     userName: user.name || '',
@@ -38,12 +36,10 @@ function createAuth() {
             },
         },
         emailVerification: {
-            sendOnSignUp: true, // Send verification email immediately after sign up
-            autoSignInAfterVerification: true, // Auto sign in after verification
-            expiresIn: 86400, // 24 hours in seconds
+            sendOnSignUp: true,
+            autoSignInAfterVerification: true,
+            expiresIn: 86400,
             sendVerificationEmail: async ({ user, url }) => {
-                // URL is already correct - it points to API's verify endpoint
-                // After verification, Better Auth will redirect to the callbackURL
                 await services.email.sendEmailVerification({
                     to: user.email,
                     userName: user.name || '',
@@ -53,13 +49,14 @@ function createAuth() {
         },
         plugins: [
             jwt({
-                // JWT tokens will be generated and can be used for API authentication
                 jwks: {
-                    // Use the jwks table from our schema
                     keyPairConfig: {
                         alg: 'RS256',
                     },
                 },
+            }),
+            openAPI({
+                disableDefaultReference: true,
             }),
         ],
         secret: (() => {
@@ -76,6 +73,4 @@ function createAuth() {
     });
 }
 
-// Export auth instance directly
-// Environment variables are loaded before this module is imported
 export const auth: ReturnType<typeof betterAuth> = createAuth();

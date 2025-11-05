@@ -1,0 +1,19 @@
+{
+  "name": "@kit/api-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.15.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.10.1",
+    "typescript": "^5.7.2"
+  }
+}

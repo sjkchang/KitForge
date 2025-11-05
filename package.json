@@ -19,6 +19,7 @@
     "db:migrate": "pnpm --filter @kit/database migrate",
     "db:studio": "pnpm --filter @kit/database studio",
     "db:seed": "pnpm --filter @kit/api seed",
+    "generate:client": "tsx scripts/generate-client.ts",
     "clean": "turbo clean && rm -rf node_modules",
     "prepare": "husky"
   },
@@ -29,7 +30,10 @@
     "@playwright/test": "^1.48.0",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
+    "openapi-fetch": "^0.15.0",
+    "openapi-typescript": "^7.10.1",
     "prettier": "^3.3.3",
+    "tsx": "^4.19.2",
     "turbo": "^2.2.3",
     "typescript": "^5.6.3"
   },
