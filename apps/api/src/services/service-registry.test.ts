@@ -7,15 +7,25 @@ import {
   getRegistry
 } from './service-registry';
 import { EmailService } from '../email/email.service';
+import { setTestConfig, resetTestConfig } from '../config/config.test-helpers';
 
 describe('Service Registry Integration', () => {
   beforeEach(() => {
+    // Set up test configuration
+    setTestConfig({
+      email: {
+        provider: { type: 'console' },
+        from: 'test@example.com',
+      },
+    });
+
     // Clear registry before each test
     getRegistry().clear();
   });
 
   afterEach(() => {
     resetServices();
+    resetTestConfig();
   });
 
   describe('registerServices', () => {
@@ -129,42 +139,18 @@ describe('Service Registry Integration', () => {
       expect(email.sendEmailVerification).toBeDefined();
     });
 
-    it('should respect EMAIL_PROVIDER environment variable', () => {
-      const originalEnv = process.env.EMAIL_PROVIDER;
-      process.env.EMAIL_PROVIDER = 'console';
-
-      // Clear and re-register
-      getRegistry().clear();
+    it('should respect email provider configuration', () => {
+      // Email provider already set in beforeEach
       registerServices();
-
       const email = services.email;
       expect(email).toBeInstanceOf(EmailService);
-
-      // Restore
-      if (originalEnv) {
-        process.env.EMAIL_PROVIDER = originalEnv;
-      } else {
-        delete process.env.EMAIL_PROVIDER;
-      }
     });
 
-    it('should respect EMAIL_FROM environment variable', () => {
-      const originalEnv = process.env.EMAIL_FROM;
-      process.env.EMAIL_FROM = 'custom@example.com';
-
-      // Clear and re-register
-      getRegistry().clear();
+    it('should respect email from configuration', () => {
+      // Email from already set in beforeEach
       registerServices();
-
       const email = services.email;
       expect(email).toBeInstanceOf(EmailService);
-
-      // Restore
-      if (originalEnv) {
-        process.env.EMAIL_FROM = originalEnv;
-      } else {
-        delete process.env.EMAIL_FROM;
-      }
     });
   });
 });

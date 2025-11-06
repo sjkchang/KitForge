@@ -4,14 +4,11 @@ import { jwt, openAPI } from 'better-auth/plugins';
 import { createDatabase } from '@kit/database';
 import * as schema from '@kit/database/schema';
 import { services } from '../services/service-registry';
+import { config } from '../config';
 
 function createAuth() {
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-        throw new Error('DATABASE_URL environment variable is required');
-    }
 
-    const db = createDatabase(databaseUrl);
+    const db = createDatabase(config.database.url);
 
     return betterAuth({
         database: drizzleAdapter(db, {
@@ -59,17 +56,9 @@ function createAuth() {
                 disableDefaultReference: true,
             }),
         ],
-        secret: (() => {
-            const secret = process.env.BETTER_AUTH_SECRET;
-            if (!secret) {
-                throw new Error('BETTER_AUTH_SECRET environment variable is required');
-            }
-            return secret;
-        })(),
-        baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3001',
-        trustedOrigins: [
-            process.env.FRONTEND_URL || 'http://localhost:3000',
-        ],
+        secret: config.auth.secret,
+        baseURL: config.auth.base_url,
+        trustedOrigins: config.auth.trusted_origins,
     });
 }
 

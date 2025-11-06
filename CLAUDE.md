@@ -280,7 +280,179 @@ afterEach(() => {
 3. Register in `registerServices()` in `services/service-registry.ts`
 4. Use anywhere: `services.sms.send(...)`
 
-### 2. Entity + Repository Pattern
+### 2. Configuration Management Pattern
+
+We use a custom configuration system that combines hardcoded project constants with environment variables, providing type-safe access with fail-fast validation.
+
+**Location:** `apps/api/src/config/`
+
+**File Structure:**
+```
+config/
+├── index.ts                 # Config singleton, loading, and exports
+├── config.schema.ts         # Zod schemas and types
+├── config.test-helpers.ts   # Test utilities (setTestConfig, resetTestConfig)
+├── project.constants.ts     # Hardcoded project constants
+└── README.md               # Detailed documentation
+```
+
+**Usage:**
+```typescript
+// Import configuration
+import { config, PROJECT_CONSTANTS } from './config';
+
+// Access project constants (hardcoded, separate from config)
+console.log(PROJECT_CONSTANTS.name);        // 'SaaS Starter Kit'
+console.log(PROJECT_CONSTANTS.version);     // '1.0.0'
+
+// Access server config (from env vars with defaults)
+console.log(config.app.port);               // 3001
+console.log(config.app.url);                // 'http://localhost:3001'
+
+// Type-safe provider config with discriminated unions
+if (config.email.provider.type === 'resend') {
+  // TypeScript knows api_key exists here
+  console.log(config.email.provider.api_key);
+}
+
+// Environment checks
+if (config.env === 'development') {
+  console.log('Running in dev mode');
+}
+```
+
+**Key Features:**
+
+1. **Grouped Structure**: Organized into logical sections (env, app, database, auth, clients, email, openapi)
+2. **Fail-Fast Validation**: Zod validates all config at startup
+3. **Smart Defaults**: Sensible defaults for development
+4. **Type-Safe Providers**: Discriminated unions for provider configs
+5. **Separate Constants**: Project constants separate from environment config
+
+**Configuration Sections:**
+```typescript
+{
+  env: 'development' | 'staging' | 'production',
+
+  app: {
+    port: number;              // Server port
+    url: string;               // This API server's URL
+  },
+
+  database: {
+    url: string;               // Required
+  },
+
+  auth: {
+    secret: string;            // Required, min 32 chars
+    base_url: string;
+    trusted_origins: string[]; // Auto-includes FRONTEND_URL
+  },
+
+  clients: {
+    web: {
+      url: string;             // Frontend URL for CORS
+    }
+  },
+
+  email: {
+    from: string;
+    provider:
+      | { type: 'console' }
+      | { type: 'resend'; api_key: string }  // Fail-fast if missing
+  },
+
+  openapi: {
+    enabled: boolean;
+    include_better_auth_routes: boolean;
+  }
+}
+```
+
+**Project Constants** (imported separately):
+```typescript
+import { PROJECT_CONSTANTS } from './config';
+
+PROJECT_CONSTANTS.name         // 'SaaS Starter Kit'
+PROJECT_CONSTANTS.description  // 'A modern SaaS starter kit...'
+PROJECT_CONSTANTS.version      // '1.0.0'
+```
+
+**Integration with Service Registry:**
+```typescript
+// services/service-registry.ts
+import { config } from '../config';
+
+export function registerServices(): void {
+  // Services use config instead of process.env
+  registry.register('email', () => {
+    return new EmailService({
+      providerType: config.email.provider.type,
+      resendApiKey: config.email.provider.type === 'resend'
+        ? config.email.provider.api_key
+        : undefined,
+      defaultFrom: config.email.from,
+    });
+  });
+}
+```
+
+**Testing:**
+```typescript
+import { setTestConfig, resetTestConfig } from './config/config.test-helpers';
+
+beforeEach(() => {
+  // Override specific config values for testing
+  setTestConfig({
+    email: {
+      provider: { type: 'console' },
+      from: 'test@test.com',
+    },
+  });
+});
+
+afterEach(() => {
+  resetTestConfig();
+});
+```
+
+**Customizing for Your SaaS:**
+
+When forking the template, edit `apps/api/src/config/project.constants.ts`:
+```typescript
+export const PROJECT_CONSTANTS = {
+  name: 'Your SaaS Name',
+  description: 'Your amazing SaaS description',
+  version: '1.0.0',
+} as const;
+```
+
+**Environment Variables:**
+
+Required:
+- `DATABASE_URL` - PostgreSQL connection string
+- `BETTER_AUTH_SECRET` - Auth secret (min 32 chars)
+
+Optional (with defaults):
+- `NODE_ENV` - Environment (default: development)
+- `PORT` - Server port (default: 3001)
+- `API_URL` - This API server's URL (default: http://localhost:3001)
+- `FRONTEND_URL` - Frontend URL for CORS (default: http://localhost:3000)
+- `BETTER_AUTH_URL` - Better Auth base URL (default: http://localhost:3001)
+- `EMAIL_FROM` - Default email sender (default: noreply@localhost.com)
+- `EMAIL_PROVIDER` - `console` or `resend` (default: console)
+- `RESEND_API_KEY` - Required when `EMAIL_PROVIDER=resend`
+- `OPENAPI_ENABLED` - Enable docs (default: true)
+- `OPENAPI_INCLUDE_BETTER_AUTH_ROUTES` - Include auth routes (default: true)
+
+**Key Benefits:**
+- **No process.env in business logic**: All env access centralized
+- **Fail-fast**: Catches config errors at startup
+- **Type-safe**: Full TypeScript inference
+- **Easy to fork**: Project constants in one file
+- **Testable**: Easy to mock with `setConfig()`
+
+### 3. Entity + Repository Pattern
 
 **Entities (Source of Truth):**
 ```typescript

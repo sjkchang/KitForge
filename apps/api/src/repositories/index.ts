@@ -1,16 +1,13 @@
 import { createDatabase, type Database } from '@kit/database';
 import { UserRepository } from './user.repository';
+import { config } from '../config';
 
 // Singleton database instance
 let db: Database | null = null;
 
 function getDatabase(): Database {
   if (!db) {
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-      throw new Error('DATABASE_URL environment variable is required');
-    }
-    db = createDatabase(databaseUrl);
+    db = createDatabase(config.database.url);
   }
   return db;
 }

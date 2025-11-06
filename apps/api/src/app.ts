@@ -13,6 +13,7 @@ import {
     ForbiddenErrorSchema,
     UserSchema,
 } from './schemas';
+import { config, PROJECT_CONSTANTS } from './config';
 
 interface OpenAPISpec {
     openapi: string;
@@ -38,7 +39,7 @@ function hasOpenAPIPlugin(api: any): api is { generateOpenAPISchema: () => Promi
 const app = new OpenAPIHono();
 
 app.use('*', cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: config.clients.web.url,
     credentials: true,
 }));
 
@@ -245,8 +246,8 @@ app.openapi(getUsersRoute, async (c) => {
 app.doc('/openapi.json', {
     openapi: '3.1.0',
     info: {
-        title: 'SaaS Starter Kit API',
-        version: '1.0.0',
+        title: `${PROJECT_CONSTANTS.name} API`,
+        version: PROJECT_CONSTANTS.version,
         description: `A production-ready, type-safe REST API built with Hono and TypeScript.
 
 ## Features
@@ -284,17 +285,9 @@ API requests are rate-limited to 100 requests per minute per IP address.`,
     },
     servers: [
         {
-            url: process.env.API_URL || 'http://localhost:3001',
-            description: 'Development server',
+            url: config.app.url,
+            description: config.env === 'production' ? 'Production server' : 'Development server',
         },
-        ...(process.env.PRODUCTION_API_URL
-            ? [
-                {
-                    url: process.env.PRODUCTION_API_URL,
-                    description: 'Production server',
-                },
-            ]
-            : []),
     ],
     tags: [
         {
@@ -316,7 +309,7 @@ API requests are rate-limited to 100 requests per minute per IP address.`,
 app.get('/api/openapi-combined', async (c) => {
     try {
         // Fetch the main API OpenAPI spec
-        const apiResponse = await fetch(`${process.env.API_URL || 'http://localhost:3001'}/openapi.json`);
+        const apiResponse = await fetch(`${config.app.url}/openapi.json`);
 
         if (!apiResponse.ok) {
             console.error('Failed to fetch API spec:', apiResponse.statusText);
@@ -327,6 +320,12 @@ app.get('/api/openapi-combined', async (c) => {
         }
 
         const apiSpec = await apiResponse.json() as OpenAPISpec;
+
+        // Check if Better Auth routes should be included
+        if (!config.openapi.include_better_auth_routes) {
+            // Return only the main API spec without auth routes
+            return c.json(apiSpec);
+        }
 
         // Generate Better Auth OpenAPI spec if plugin is enabled
         if (!hasOpenAPIPlugin(auth.api)) {
@@ -403,38 +402,41 @@ app.get('/api/openapi-combined', async (c) => {
 
         return c.json({
             error: 'Failed to generate combined OpenAPI specification',
-            details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+            details: config.env === 'development' ? errorMessage : undefined,
         }, 500);
     }
 });
 
-app.get(
-    '/docs',
-    Scalar({
-        spec: {
-            url: '/api/openapi-combined',
-        },
-        theme: 'purple',
-        layout: 'modern',
-        darkMode: true,
-        showSidebar: true,
-        authentication: {
-            preferredSecurityScheme: 'Bearer',
-        },
-        defaultHttpClient: {
-            targetKey: 'js',
-            clientKey: 'fetch',
-        },
-        defaultOpenAllTags: false,
-        hideModels: false,
-        searchHotKey: 'k',
-        metaData: {
-            title: 'SaaS Starter Kit API Documentation',
-            description: 'Type-safe REST API for the SaaS starter kit with authentication, user management, and more.',
-            ogDescription: 'Complete API reference for the SaaS Starter Kit',
-            ogTitle: 'SaaS Starter Kit API',
-        },
-    } as Parameters<typeof Scalar>[0])
-);
+// Only expose OpenAPI documentation if enabled in config
+if (config.openapi.enabled) {
+    app.get(
+        '/docs',
+        Scalar({
+            spec: {
+                url: '/api/openapi-combined',
+            },
+            theme: 'purple',
+            layout: 'modern',
+            darkMode: true,
+            showSidebar: true,
+            authentication: {
+                preferredSecurityScheme: 'Bearer',
+            },
+            defaultHttpClient: {
+                targetKey: 'js',
+                clientKey: 'fetch',
+            },
+            defaultOpenAllTags: false,
+            hideModels: false,
+            searchHotKey: 'k',
+            metaData: {
+                title: `${PROJECT_CONSTANTS.name} API Documentation`,
+                description: `Type-safe REST API for ${PROJECT_CONSTANTS.name} with authentication, user management, and more.`,
+                ogDescription: `Complete API reference for ${PROJECT_CONSTANTS.name}`,
+                ogTitle: `${PROJECT_CONSTANTS.name} API`,
+            },
+        } as Parameters<typeof Scalar>[0])
+    );
+}
 
 export default app;

@@ -1,6 +1,7 @@
 import { ServiceRegistry } from './registry';
 import type { Services } from './types';
 import { EmailService } from '../email/email.service';
+import { config } from '../config';
 
 // Global registry instance
 const registry = new ServiceRegistry<Services>();
@@ -14,20 +15,17 @@ let registered = false;
  * This function is called automatically on first service access,
  * but can also be called explicitly at application startup.
  *
- * Services are lazily instantiated on first access.
+ * Services are lazily instantiated on first access based on configuration.
  */
 export function registerServices(): void {
   if (registered) return;
 
-  // Register email service
+  // Register email service based on config
   registry.register('email', () => {
-    const providerType = (process.env.EMAIL_PROVIDER || 'console') as 'console' | 'resend';
-    const defaultFrom = process.env.EMAIL_FROM || 'noreply@localhost.com';
-
     return new EmailService({
-      providerType,
-      resendApiKey: process.env.RESEND_API_KEY,
-      defaultFrom,
+      providerType: config.email.provider.type,
+      resendApiKey: config.email.provider.type === 'resend' ? config.email.provider.api_key : undefined,
+      defaultFrom: config.email.from,
     });
   });
 
