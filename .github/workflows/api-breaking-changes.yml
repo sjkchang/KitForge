@@ -119,30 +119,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## ❌ Breaking API Changes Detected
-
-Your changes introduce **breaking changes** to the API that will break existing clients using \`@kit/api-client\`.
-
-${breaking}
-
-### Options:
-
-1. **Fix the breaking changes (recommended)**
-   - Make changes backward compatible
-   - Add new fields as optional
-   - Deprecate instead of removing
-
-2. **Version your API**
-   - Create \`/api/v2\` endpoints for breaking changes
-   - Keep \`/api/v1\` endpoints for existing clients
-   - Update API versioning strategy
-
-3. **If intentional:**
-   - Document why the breaking change is necessary
-   - Plan client migration strategy
-   - Consider major version bump
-
-**This PR will be blocked from merging until breaking changes are resolved.**`
+              body: '## ❌ Breaking API Changes Detected\n\nYour changes introduce **breaking changes** to the API that will break existing clients using `@kit/api-client`.\n\n' + breaking + '\n\n### Options:\n\n1. **Fix the breaking changes (recommended)**\n   - Make changes backward compatible\n   - Add new fields as optional\n   - Deprecate instead of removing\n\n2. **Version your API**\n   - Create `/api/v2` endpoints for breaking changes\n   - Keep `/api/v1` endpoints for existing clients\n   - Update API versioning strategy\n\n3. **If intentional:**\n   - Document why the breaking change is necessary\n   - Plan client migration strategy\n   - Consider major version bump\n\n**This PR will be blocked from merging until breaking changes are resolved.**'
             });
 
       - name: Comment on PR (Warnings)
@@ -157,19 +134,7 @@ ${breaking}
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## ⚠️ API Warnings Detected
-
-Your changes have potential compatibility concerns:
-
-${warnings}
-
-### Action Required:
-
-1. Review the warnings above
-2. If intentional, use workflow_dispatch with "Ignore warnings" to override
-3. Otherwise, consider making these changes backward compatible
-
-**This PR is blocked pending review. Use workflow_dispatch to override if needed.**`
+              body: '## ⚠️ API Warnings Detected\n\nYour changes have potential compatibility concerns:\n\n' + warnings + '\n\n### Action Required:\n\n1. Review the warnings above\n2. If intentional, use workflow_dispatch with "Ignore warnings" to override\n3. Otherwise, consider making these changes backward compatible\n\n**This PR is blocked pending review. Use workflow_dispatch to override if needed.**'
             });
 
       - name: Fail on breaking changes
