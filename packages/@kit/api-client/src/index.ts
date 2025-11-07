@@ -9,12 +9,12 @@ let authToken: string | null = null;
 
 // Auth middleware to automatically add Bearer token to requests
 const authMiddleware: Middleware = {
-  async onRequest({ request }) {
-    if (authToken) {
-      request.headers.set('Authorization', `Bearer ${authToken}`);
-    }
-    return request;
-  },
+    async onRequest({ request }) {
+        if (authToken) {
+            request.headers.set('Authorization', `Bearer ${authToken}`);
+        }
+        return request;
+    },
 };
 
 // Register middleware
@@ -43,21 +43,21 @@ client.use(authMiddleware);
  * ```
  */
 export const api = Object.assign(client, {
-  /**
-   * Set authentication token for all subsequent requests
-   *
-   * @param token - JWT token (or null to clear)
-   */
-  setAuth(token: string | null) {
-    authToken = token;
-  },
+    /**
+     * Set authentication token for all subsequent requests
+     *
+     * @param token - JWT token (or null to clear)
+     */
+    setAuth(token: string | null) {
+        authToken = token;
+    },
 
-  /**
-   * Clear authentication token
-   */
-  clearAuth() {
-    authToken = null;
-  },
+    /**
+     * Clear authentication token
+     */
+    clearAuth() {
+        authToken = null;
+    },
 });
 
 /**
@@ -76,24 +76,27 @@ export const api = Object.assign(client, {
  * });
  * ```
  */
-export function createApiClient(options: {
-  baseUrl?: string;
-  token?: string;
-  headers?: HeadersInit;
-} = {}) {
-  const {
-    baseUrl: customBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
-    token,
-    headers = {},
-  } = options;
+export function createApiClient(
+    options: {
+        baseUrl?: string;
+        token?: string;
+        headers?: HeadersInit;
+    } = {},
+) {
+    const {
+        baseUrl: customBaseUrl = process.env.NEXT_PUBLIC_API_URL ||
+            'http://localhost:3001',
+        token,
+        headers = {},
+    } = options;
 
-  return createClient<paths>({
-    baseUrl: customBaseUrl,
-    headers: {
-      ...headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+    return createClient<paths>({
+        baseUrl: customBaseUrl,
+        headers: {
+            ...headers,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+    });
 }
 
 /**

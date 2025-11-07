@@ -7,7 +7,6 @@ import { services } from '../services/service-registry';
 import { config } from '../config';
 
 function createAuth() {
-
     const db = createDatabase(config.database.url);
 
     return betterAuth({

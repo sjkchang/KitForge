@@ -23,21 +23,24 @@ A professional, production-ready SaaS starter kit built as a TypeScript monorepo
 ## Technology Stack
 
 ### Monorepo & Build System
+
 - **pnpm** - Package manager with workspace support
 - **Turborepo** - Build orchestration, caching, task scheduling
 - Workspace packages use `workspace:*` protocol (always in sync)
 
 ### Frontend Applications
+
 - **Next.js 14+** (App Router) - Main SaaS application
-  - React Server Components
-  - Server Actions for mutations
-  - TypeScript strict mode
+    - React Server Components
+    - Server Actions for mutations
+    - TypeScript strict mode
 - **Astro** - Marketing site (landing, pricing, docs, blog)
-  - Static generation for performance
-  - Content collections for blog/docs
-  - Optional React islands
+    - Static generation for performance
+    - Content collections for blog/docs
+    - Optional React islands
 
 ### Backend
+
 - **Hono** - HTTP framework (lightweight, modern, edge-ready)
 - **@hono/zod-openapi** - OpenAPI spec generation with Zod
 - **PostgreSQL** - Primary database
@@ -45,29 +48,33 @@ A professional, production-ready SaaS starter kit built as a TypeScript monorepo
 - Repositories use flexible query approach (Drizzle, Kysely, or raw SQL)
 
 ### Authentication & Authorization
+
 - **Better Auth** - Modern TypeScript-first authentication
-  - Email/password authentication
-  - OAuth providers (Google, GitHub, etc.)
-  - Session management
-  - Email verification & password reset
+    - Email/password authentication
+    - OAuth providers (Google, GitHub, etc.)
+    - Session management
+    - Email verification & password reset
 - **CASL** - Authorization with ability-based access control
-  - Hybrid RBAC + ABAC model
-  - Backend enforcement, frontend optimistic checks
-  - Shared ability definitions
+    - Hybrid RBAC + ABAC model
+    - Backend enforcement, frontend optimistic checks
+    - Shared ability definitions
 
 ### Payments
+
 - **Polar.sh** - Modern payment platform for SaaS
-  - Subscription management
-  - Usage-based billing
-  - Webhook handling
+    - Subscription management
+    - Usage-based billing
+    - Webhook handling
 
 ### Type-Safe API Client
+
 - **OpenAPI spec** - Auto-generated from Hono + Zod schemas
 - **openapi-typescript** - Generate TypeScript types from spec
 - **openapi-fetch** - Type-safe fetch client
 - Flow: Zod schemas → OpenAPI → Generated client types
 
 ### Testing
+
 - **Vitest** - Unit and integration tests
 - **Playwright** - E2E tests
 - **@testing-library/react** - Component tests
@@ -75,6 +82,7 @@ A professional, production-ready SaaS starter kit built as a TypeScript monorepo
 - In-memory repositories for unit tests
 
 ### Code Quality & Tooling
+
 - **TypeScript** - Strict mode across all packages
 - **ESLint** - Linting with shared config
 - **Prettier** - Code formatting
@@ -208,26 +216,31 @@ kit/
 ### Why Each Package is External
 
 **`@kit/database`**
+
 - **Used by:** API (all data), Web (Better Auth + optional Server Components)
 - **Purpose:** Database client, migrations, schema
 - **Justification:** Both apps need DB access; migrations need standalone package
 
 **`@kit/auth`**
+
 - **Used by:** API (server config), Web (client), Marketing (optional), future Mobile
 - **Purpose:** Better Auth configuration and utilities
 - **Justification:** Ensures consistent auth setup across all clients
 
 **`@kit/authorization`**
+
 - **Used by:** API (enforcement), Web (optimistic checks)
 - **Purpose:** CASL ability definitions
 - **Justification:** Permissions must be identical on both sides
 
 **`@kit/api-client`**
+
 - **Used by:** Web, Marketing, future Mobile, customer apps
 - **Purpose:** Type-safe API client
 - **Justification:** Reusable across multiple frontends, good DX for customers
 
 **`@kit/config`**
+
 - **Used by:** All apps and packages
 - **Purpose:** Shared build configs (TypeScript, ESLint, Prettier)
 - **Justification:** Ensures consistency across entire monorepo
@@ -235,15 +248,18 @@ kit/
 ### Packages NOT Created (Initially)
 
 **`@kit/ui`** - ❌ Not created initially
+
 - Reason: Only 2 consumers, adds build complexity
 - Alternative: Components in `apps/web/components`, importable if needed
 - Add later if Marketing needs significant shared components
 
 **`@kit/emails`** - ❌ Not a package
+
 - Reason: Only API sends emails
 - Location: `apps/api/emails/` (internal to API)
 
 **`@kit/utils`** - ❌ Not created
+
 - Reason: Becomes dumping ground, unclear boundaries
 - Alternative: Domain-specific utils in relevant packages
 
@@ -260,12 +276,12 @@ Entities are defined **separately** from repositories to ensure type safety:
 import { z } from 'zod';
 
 export const UserEntity = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  name: z.string().nullable(),
-  role: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+    id: z.string().uuid(),
+    email: z.string().email(),
+    name: z.string().nullable(),
+    role: z.string(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
 });
 
 export type User = z.infer<typeof UserEntity>;
@@ -281,28 +297,28 @@ import { UserEntity, type User } from '../entities/user.entity';
 import type { Database } from '@kit/database';
 
 export class UserRepository {
-  constructor(private db: Database) {}
+    constructor(private db: Database) {}
 
-  async findById(id: string): Promise<User | null> {
-    // Query using any method (Drizzle, Kysely, raw SQL)
-    const result = await this.db.query.users.findFirst({
-      where: eq(users.id, id),
-    });
+    async findById(id: string): Promise<User | null> {
+        // Query using any method (Drizzle, Kysely, raw SQL)
+        const result = await this.db.query.users.findFirst({
+            where: eq(users.id, id),
+        });
 
-    if (!result) return null;
+        if (!result) return null;
 
-    // MUST validate against entity schema
-    return UserEntity.parse(result);
-  }
+        // MUST validate against entity schema
+        return UserEntity.parse(result);
+    }
 }
 
 // In-memory implementation for tests
 export class InMemoryUserRepository {
-  private users: Map<string, User> = new Map();
+    private users: Map<string, User> = new Map();
 
-  async findById(id: string): Promise<User | null> {
-    return this.users.get(id) || null;
-  }
+    async findById(id: string): Promise<User | null> {
+        return this.users.get(id) || null;
+    }
 }
 ```
 
@@ -337,6 +353,7 @@ Backend Validation Schema (apps/api/src/schemas)
 ### User Roles
 
 Initial roles (defined in database schema and enforced by backend):
+
 - `anon` - Unauthenticated users
 - `user` - Authenticated users (free tier)
 - `premium` - Premium subscription tier
@@ -346,41 +363,46 @@ Initial roles (defined in database schema and enforced by backend):
 ### Authorization Model: Hybrid RBAC + ABAC
 
 **Role-Based:**
+
 - Admins can manage everything
 - Premium/Pro users have higher quotas
 
 **Attribute-Based:**
+
 - Users can only modify their own resources
 - Resource ownership checks (`authorId === user.id`)
 
 **Example:**
+
 ```typescript
 // packages/authorization/src/abilities.ts
 import { defineAbility } from '@casl/ability';
 
 export function defineAbilitiesFor(user: User, organizationRole?: string) {
-  return defineAbility((can, cannot) => {
-    if (user.role === 'admin') {
-      can('manage', 'all');
-    } else {
-      // Read public content
-      can('read', 'Post', { published: true });
+    return defineAbility((can, cannot) => {
+        if (user.role === 'admin') {
+            can('manage', 'all');
+        } else {
+            // Read public content
+            can('read', 'Post', { published: true });
 
-      // Create own content
-      can('create', 'Post');
+            // Create own content
+            can('create', 'Post');
 
-      // Update/delete own content
-      can(['update', 'delete'], 'Post', { authorId: user.id });
+            // Update/delete own content
+            can(['update', 'delete'], 'Post', { authorId: user.id });
 
-      // Update own profile
-      can('update', 'User', { id: user.id });
-    }
+            // Update own profile
+            can('update', 'User', { id: user.id });
+        }
 
-    // Organization-level permissions (if multi-tenant)
-    if (organizationRole === 'owner') {
-      can('manage', 'all', { organizationId: user.currentOrganizationId });
-    }
-  });
+        // Organization-level permissions (if multi-tenant)
+        if (organizationRole === 'owner') {
+            can('manage', 'all', {
+                organizationId: user.currentOrganizationId,
+            });
+        }
+    });
 }
 ```
 
@@ -402,6 +424,7 @@ CREATE INDEX idx_posts_org ON posts(organization_id);
 ```
 
 **Database Schema (when needed):**
+
 - `organizations` table
 - `organization_members` table (user ↔ org many-to-many)
 - All resources have `organization_id` foreign key
@@ -415,38 +438,40 @@ Simple factory-based DI (no framework):
 ```typescript
 // apps/api/src/app.ts
 export function createApp() {
-  const env = process.env;
-  const isTest = env.NODE_ENV === 'test';
+    const env = process.env;
+    const isTest = env.NODE_ENV === 'test';
 
-  // 1. Infrastructure
-  const db = isTest ? null : createDatabase(env.DATABASE_URL!);
+    // 1. Infrastructure
+    const db = isTest ? null : createDatabase(env.DATABASE_URL!);
 
-  // 2. Repositories (environment-based)
-  const userRepository = isTest || !db
-    ? new InMemoryUserRepository()
-    : new DrizzleUserRepository(db);
+    // 2. Repositories (environment-based)
+    const userRepository =
+        isTest || !db
+            ? new InMemoryUserRepository()
+            : new DrizzleUserRepository(db);
 
-  // 3. Services
-  const emailService = new EmailService({
-    provider: isTest ? 'console' : 'resend',
-    apiKey: env.RESEND_API_KEY,
-  });
+    // 3. Services
+    const emailService = new EmailService({
+        provider: isTest ? 'console' : 'resend',
+        apiKey: env.RESEND_API_KEY,
+    });
 
-  const paymentService = new PaymentService({
-    apiKey: env.POLAR_API_KEY,
-  });
+    const paymentService = new PaymentService({
+        apiKey: env.POLAR_API_KEY,
+    });
 
-  // 4. Register routes with dependencies
-  const app = new OpenAPIHono();
+    // 4. Register routes with dependencies
+    const app = new OpenAPIHono();
 
-  app.route('/users', userRoutes({ userRepository }));
-  app.route('/auth', authRoutes({ userRepository, emailService }));
+    app.route('/users', userRoutes({ userRepository }));
+    app.route('/auth', authRoutes({ userRepository, emailService }));
 
-  return app;
+    return app;
 }
 ```
 
 **Benefits:**
+
 - Simple, no magic
 - Easy to test (inject mocks)
 - Type-safe
@@ -459,18 +484,21 @@ export function createApp() {
 ### Test Types
 
 **Unit Tests** (Fast, in-memory)
+
 - Pure functions, utilities
 - Services with mocked dependencies
 - Components (isolated)
 - Uses: In-memory repositories
 
 **Integration Tests** (Medium, real DB)
+
 - Repository implementations
 - API endpoints
 - Database queries
 - Uses: Testcontainers (Postgres)
 
 **E2E Tests** (Slow, full stack)
+
 - Critical user flows (signup, login, billing)
 - Multi-step processes
 - Uses: Testcontainers + Playwright
@@ -478,6 +506,7 @@ export function createApp() {
 ### Test Location
 
 Co-located with source code:
+
 ```
 src/
 ├── repositories/
@@ -489,6 +518,7 @@ src/
 ```
 
 E2E tests centralized:
+
 ```
 tests/e2e/
 ├── auth.spec.ts
@@ -508,9 +538,11 @@ tests/e2e/
 ### Branch Strategy
 
 **Protected Branch:**
+
 - `main` - Production code, no direct commits, requires PR
 
 **Feature Branches:**
+
 - `feature/*` - New features
 - `fix/*` - Bug fixes
 - `refactor/*` - Refactoring
@@ -523,6 +555,7 @@ tests/e2e/
 **Format:** `<type>(<scope>): <description>`
 
 **Types:**
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation
@@ -533,6 +566,7 @@ tests/e2e/
 - `ci` - CI/CD
 
 **Examples:**
+
 ```
 feat(auth): add Google OAuth provider
 fix(api): handle null user in session
@@ -544,6 +578,7 @@ chore(deps): update dependencies
 ### PR Requirements
 
 Before merge to `main`:
+
 - ✅ All tests pass (unit + integration + e2e)
 - ✅ Build succeeds
 - ✅ No lint/type errors
@@ -553,6 +588,7 @@ Before merge to `main`:
 ### Merge Strategy
 
 **Squash merge** (recommended)
+
 - All commits squashed into one
 - PR title becomes commit message
 - Clean, linear history
@@ -562,12 +598,14 @@ Before merge to `main`:
 ## Versioning Strategy
 
 **Single version for entire kit:**
+
 - Version applies to whole monorepo, not individual packages
 - Workspace packages use `workspace:*` (always in sync)
 - Deploy all apps together (atomic deployment)
 - No version skew between API and frontend
 
 **Changesets workflow:**
+
 ```bash
 # Document changes
 pnpm changeset add
@@ -587,6 +625,7 @@ git push --tags
 ### Single VPS Deployment (Initial)
 
 All apps deployed together on one server:
+
 - API + Web + Marketing on same version
 - Shared database
 - Simple, cost-effective
@@ -594,6 +633,7 @@ All apps deployed together on one server:
 ### Horizontal Scaling Path (Future)
 
 Multiple instances of same version:
+
 ```
 Load Balancer
     ├─ API instance 1 (v1.0.0)
@@ -606,6 +646,7 @@ Web instances:
 ```
 
 Deployment methods:
+
 - Blue/green deployment
 - Rolling updates (gradual)
 - No version skew
@@ -617,6 +658,7 @@ Deployment methods:
 ### Must-Have Features
 
 **Authentication:**
+
 - [x] Email/password signup and login
 - [x] Email verification
 - [x] Password reset
@@ -624,16 +666,19 @@ Deployment methods:
 - [ ] OAuth (Google, GitHub)
 
 **Authorization:**
+
 - [x] Basic CASL setup
 - [x] Role-based permissions
 - [x] Resource ownership checks
 
 **User Management:**
+
 - [x] User registration
 - [x] User profile
 - [x] Account settings
 
 **Infrastructure:**
+
 - [x] Database migrations
 - [x] Type-safe API client
 - [x] Testing infrastructure
@@ -645,6 +690,7 @@ Deployment methods:
 ## Future Phases
 
 ### Phase 2: Billing & Subscriptions
+
 - Polar.sh integration
 - Subscription plans
 - Payment methods
@@ -652,6 +698,7 @@ Deployment methods:
 - Customer portal
 
 ### Phase 3: Platform Features
+
 - Email system (transactional)
 - File upload/storage
 - Background jobs
@@ -659,12 +706,14 @@ Deployment methods:
 - Audit logging
 
 ### Phase 4: Multi-Tenancy
+
 - Organizations/teams
 - Team invitations
 - Role-based org permissions
 - Organization billing
 
 ### Phase 5: Advanced Features
+
 - Real-time (WebSockets)
 - Notifications system
 - Search (Meilisearch/Typesense)
@@ -689,6 +738,7 @@ All code changes must include documentation updates:
 ## Success Criteria
 
 ### For Developers (Users of Kit)
+
 - ✅ Can set up locally in < 10 minutes
 - ✅ Clear documentation for all features
 - ✅ Easy to customize for their SaaS
@@ -696,6 +746,7 @@ All code changes must include documentation updates:
 - ✅ Good test coverage examples
 
 ### For Maintainers (You)
+
 - ✅ Easy to add new features
 - ✅ Simple to refactor
 - ✅ Clear architecture boundaries
@@ -703,6 +754,7 @@ All code changes must include documentation updates:
 - ✅ Documentation stays up to date
 
 ### For Customers (Buyers)
+
 - ✅ Professional, polished product
 - ✅ Excellent documentation
 - ✅ Active maintenance
@@ -722,6 +774,7 @@ All code changes must include documentation updates:
 ---
 
 **Next Steps:**
+
 1. Review and approve this requirements document
 2. Create ARCHITECTURE.md with detailed design
 3. Initialize monorepo structure

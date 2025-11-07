@@ -17,8 +17,8 @@ import { authClient } from './auth-client';
  * ```
  */
 export async function getSessionToken(): Promise<string | null> {
-  const session = await authClient.getSession();
-  return session?.data?.session?.token ?? null;
+    const session = await authClient.getSession();
+    return session?.data?.session?.token ?? null;
 }
 
 /**

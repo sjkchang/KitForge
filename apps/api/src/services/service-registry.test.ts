@@ -1,156 +1,156 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
-  registerServices,
-  services,
-  configureServices,
-  resetServices,
-  getRegistry
+    registerServices,
+    services,
+    configureServices,
+    resetServices,
+    getRegistry,
 } from './service-registry';
 import { EmailService } from '../email/email.service';
 import { setTestConfig, resetTestConfig } from '../config/config.test-helpers';
 
 describe('Service Registry Integration', () => {
-  beforeEach(() => {
-    // Set up test configuration
-    setTestConfig({
-      email: {
-        provider: { type: 'console' },
-        from: 'test@example.com',
-      },
+    beforeEach(() => {
+        // Set up test configuration
+        setTestConfig({
+            email: {
+                provider: { type: 'console' },
+                from: 'test@example.com',
+            },
+        });
+
+        // Clear registry before each test
+        getRegistry().clear();
     });
 
-    // Clear registry before each test
-    getRegistry().clear();
-  });
-
-  afterEach(() => {
-    resetServices();
-    resetTestConfig();
-  });
-
-  describe('registerServices', () => {
-    it('should register email service', () => {
-      registerServices();
-
-      const registry = getRegistry();
-      expect(registry.has('email')).toBe(true);
+    afterEach(() => {
+        resetServices();
+        resetTestConfig();
     });
 
-    it('should be idempotent (safe to call multiple times)', () => {
-      registerServices();
-      registerServices();
-      registerServices();
+    describe('registerServices', () => {
+        it('should register email service', () => {
+            registerServices();
 
-      // Should not throw
-      expect(getRegistry().has('email')).toBe(true);
-    });
-  });
+            const registry = getRegistry();
+            expect(registry.has('email')).toBe(true);
+        });
 
-  describe('services proxy', () => {
-    it('should auto-register on first access', () => {
-      const registry = getRegistry();
-      expect(registry.has('email')).toBe(false);
+        it('should be idempotent (safe to call multiple times)', () => {
+            registerServices();
+            registerServices();
+            registerServices();
 
-      // Access should trigger registration
-      const email = services.email;
-
-      expect(email).toBeInstanceOf(EmailService);
-      expect(registry.has('email')).toBe(true);
+            // Should not throw
+            expect(getRegistry().has('email')).toBe(true);
+        });
     });
 
-    it('should provide access to email service', () => {
-      registerServices();
+    describe('services proxy', () => {
+        it('should auto-register on first access', () => {
+            const registry = getRegistry();
+            expect(registry.has('email')).toBe(false);
 
-      expect(services.email).toBeInstanceOf(EmailService);
+            // Access should trigger registration
+            const email = services.email;
+
+            expect(email).toBeInstanceOf(EmailService);
+            expect(registry.has('email')).toBe(true);
+        });
+
+        it('should provide access to email service', () => {
+            registerServices();
+
+            expect(services.email).toBeInstanceOf(EmailService);
+        });
+
+        it('should return same instance on multiple accesses (singleton)', () => {
+            registerServices();
+
+            const first = services.email;
+            const second = services.email;
+
+            expect(first).toBe(second);
+        });
+
+        it('should allow destructuring', () => {
+            registerServices();
+
+            const { email } = services;
+
+            expect(email).toBeInstanceOf(EmailService);
+        });
     });
 
-    it('should return same instance on multiple accesses (singleton)', () => {
-      registerServices();
+    describe('configureServices', () => {
+        it('should allow overriding services for testing', () => {
+            const mockEmail = {
+                sendEmailVerification: vi.fn(),
+                sendPasswordReset: vi.fn(),
+                sendRaw: vi.fn(),
+            } as any;
 
-      const first = services.email;
-      const second = services.email;
+            configureServices({ email: mockEmail });
 
-      expect(first).toBe(second);
+            expect(services.email).toBe(mockEmail);
+        });
+
+        it('should override only specified services', () => {
+            registerServices();
+
+            const originalEmail = services.email;
+            const mockEmail = {
+                sendEmailVerification: vi.fn(),
+                sendPasswordReset: vi.fn(),
+                sendRaw: vi.fn(),
+            } as any;
+
+            configureServices({ email: mockEmail });
+
+            expect(services.email).toBe(mockEmail);
+            expect(services.email).not.toBe(originalEmail);
+        });
     });
 
-    it('should allow destructuring', () => {
-      registerServices();
+    describe('resetServices', () => {
+        it('should clear service instances', () => {
+            registerServices();
 
-      const { email } = services;
+            const first = services.email;
 
-      expect(email).toBeInstanceOf(EmailService);
-    });
-  });
+            resetServices();
+            // Need to re-register since reset clears the registered flag
+            const second = services.email;
 
-  describe('configureServices', () => {
-    it('should allow overriding services for testing', () => {
-      const mockEmail = {
-        sendEmailVerification: vi.fn(),
-        sendPasswordReset: vi.fn(),
-        sendRaw: vi.fn(),
-      } as any;
-
-      configureServices({ email: mockEmail });
-
-      expect(services.email).toBe(mockEmail);
+            // Should be different instances
+            expect(second).toBeInstanceOf(EmailService);
+            expect(first).not.toBe(second);
+        });
     });
 
-    it('should override only specified services', () => {
-      registerServices();
+    describe('EmailService creation', () => {
+        it('should create EmailService with console provider by default', () => {
+            registerServices();
 
-      const originalEmail = services.email;
-      const mockEmail = {
-        sendEmailVerification: vi.fn(),
-        sendPasswordReset: vi.fn(),
-        sendRaw: vi.fn(),
-      } as any;
+            const email = services.email;
 
-      configureServices({ email: mockEmail });
+            expect(email).toBeInstanceOf(EmailService);
+            // Provider is private, but we can test it works
+            expect(email.sendEmailVerification).toBeDefined();
+        });
 
-      expect(services.email).toBe(mockEmail);
-      expect(services.email).not.toBe(originalEmail);
+        it('should respect email provider configuration', () => {
+            // Email provider already set in beforeEach
+            registerServices();
+            const email = services.email;
+            expect(email).toBeInstanceOf(EmailService);
+        });
+
+        it('should respect email from configuration', () => {
+            // Email from already set in beforeEach
+            registerServices();
+            const email = services.email;
+            expect(email).toBeInstanceOf(EmailService);
+        });
     });
-  });
-
-  describe('resetServices', () => {
-    it('should clear service instances', () => {
-      registerServices();
-
-      const first = services.email;
-
-      resetServices();
-      // Need to re-register since reset clears the registered flag
-      const second = services.email;
-
-      // Should be different instances
-      expect(second).toBeInstanceOf(EmailService);
-      expect(first).not.toBe(second);
-    });
-  });
-
-  describe('EmailService creation', () => {
-    it('should create EmailService with console provider by default', () => {
-      registerServices();
-
-      const email = services.email;
-
-      expect(email).toBeInstanceOf(EmailService);
-      // Provider is private, but we can test it works
-      expect(email.sendEmailVerification).toBeDefined();
-    });
-
-    it('should respect email provider configuration', () => {
-      // Email provider already set in beforeEach
-      registerServices();
-      const email = services.email;
-      expect(email).toBeInstanceOf(EmailService);
-    });
-
-    it('should respect email from configuration', () => {
-      // Email from already set in beforeEach
-      registerServices();
-      const email = services.email;
-      expect(email).toBeInstanceOf(EmailService);
-    });
-  });
 });

@@ -68,6 +68,7 @@ pnpm db:seed
 ```
 
 Default admin credentials (if seeded):
+
 - Email: admin@example.com
 - Password: admin123
 
@@ -83,11 +84,12 @@ pnpm --filter @kit/web dev      # Web on http://localhost:3000
 ```
 
 Visit:
+
 - **Web app**: http://localhost:3000
 - **API health**: http://localhost:3001/health
 - **API documentation**: http://localhost:3001/docs
 - **OpenAPI spec**: http://localhost:3001/openapi.json
-- **Better Auth endpoints**: http://localhost:3001/api/auth/*
+- **Better Auth endpoints**: http://localhost:3001/api/auth/\*
 
 ## Project Structure
 
@@ -138,21 +140,27 @@ pnpm --filter @kit/database test # Run schema validation tests
 ## Tech Stack
 
 **Monorepo & Build:**
+
 - pnpm, Turborepo (future)
 
 **Backend:**
+
 - Hono, Better Auth, PostgreSQL, Drizzle ORM
 
 **Frontend:**
+
 - Next.js 15, React 19, Tailwind CSS, shadcn/ui
 
 **Auth & Permissions:**
+
 - Better Auth with JWT plugin, Role-based access control
 
 **Testing:**
+
 - Vitest with schema validation tests
 
 **Tooling:**
+
 - TypeScript strict mode, ESLint, Prettier, Husky, commitlint
 
 ## License

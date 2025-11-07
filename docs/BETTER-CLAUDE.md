@@ -11,6 +11,7 @@
 ### What This Project Is
 
 A professional, production-ready SaaS starter kit built as a TypeScript monorepo that can be:
+
 1. Used as a template for building SaaS applications
 2. Sold as a commercial product to developers
 
@@ -25,6 +26,7 @@ A professional, production-ready SaaS starter kit built as a TypeScript monorepo
 ### Working Principles
 
 **DO:**
+
 - Make small, incremental commits
 - Write tests before implementation
 - Update documentation in the same commit
@@ -34,6 +36,7 @@ A professional, production-ready SaaS starter kit built as a TypeScript monorepo
 - Use in-memory implementations for tests
 
 **DON'T:**
+
 - Make large, sweeping changes
 - Skip tests
 - Leave documentation outdated
@@ -77,11 +80,13 @@ kit/
 ### Core Technologies
 
 **Monorepo:**
+
 - pnpm (package manager)
 - Turborepo (build orchestration)
-- workspace:* protocol (always use local packages)
+- workspace:\* protocol (always use local packages)
 
 **Backend:**
+
 - Hono (HTTP framework)
 - @hono/zod-openapi (OpenAPI generation)
 - PostgreSQL (database)
@@ -90,17 +95,20 @@ kit/
 - CASL (authorization)
 
 **Frontend:**
+
 - Next.js 14+ (App Router, React Server Components)
 - Astro (marketing site)
 - openapi-fetch (type-safe API client)
 
 **Testing:**
+
 - Vitest (unit + integration)
 - Playwright (E2E)
 - Testcontainers (integration tests with real Postgres)
 - In-memory repositories (unit tests)
 
 **Tooling:**
+
 - TypeScript (strict mode)
 - ESLint + Prettier
 - Husky (pre-commit hooks)
@@ -115,31 +123,33 @@ kit/
 ```typescript
 // apps/api/src/app.ts
 export function createApp() {
-  const env = process.env;
-  const isTest = env.NODE_ENV === 'test';
+    const env = process.env;
+    const isTest = env.NODE_ENV === 'test';
 
-  // 1. Create infrastructure
-  const db = isTest ? null : createDatabase(env.DATABASE_URL!);
+    // 1. Create infrastructure
+    const db = isTest ? null : createDatabase(env.DATABASE_URL!);
 
-  // 2. Create repositories (environment-based)
-  const userRepository = isTest || !db
-    ? new InMemoryUserRepository()
-    : new DrizzleUserRepository(db);
+    // 2. Create repositories (environment-based)
+    const userRepository =
+        isTest || !db
+            ? new InMemoryUserRepository()
+            : new DrizzleUserRepository(db);
 
-  // 3. Create services
-  const emailService = new EmailService({
-    provider: isTest ? 'console' : 'resend',
-  });
+    // 3. Create services
+    const emailService = new EmailService({
+        provider: isTest ? 'console' : 'resend',
+    });
 
-  // 4. Register routes with dependencies
-  const app = new OpenAPIHono();
-  app.route('/users', userRoutes({ userRepository, emailService }));
+    // 4. Register routes with dependencies
+    const app = new OpenAPIHono();
+    app.route('/users', userRoutes({ userRepository, emailService }));
 
-  return app;
+    return app;
 }
 ```
 
 **Key points:**
+
 - Simple factory function, no DI framework
 - Environment-based selection (test vs production)
 - Dependencies passed as function arguments
@@ -148,42 +158,45 @@ export function createApp() {
 ### 2. Entity + Repository Pattern
 
 **Entities (Source of Truth):**
+
 ```typescript
 // apps/api/src/entities/user.entity.ts
 import { z } from 'zod';
 
 export const UserEntity = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  name: z.string().nullable(),
-  role: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+    id: z.string().uuid(),
+    email: z.string().email(),
+    name: z.string().nullable(),
+    role: z.string(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
 });
 
 export type User = z.infer<typeof UserEntity>;
 ```
 
 **Repositories (MUST validate against entities):**
+
 ```typescript
 // apps/api/src/repositories/user.repository.ts
 export class DrizzleUserRepository {
-  constructor(private db: Database) {}
+    constructor(private db: Database) {}
 
-  async findById(id: string): Promise<User | null> {
-    const result = await this.db.query.users.findFirst({
-      where: eq(users.id, id),
-    });
+    async findById(id: string): Promise<User | null> {
+        const result = await this.db.query.users.findFirst({
+            where: eq(users.id, id),
+        });
 
-    if (!result) return null;
+        if (!result) return null;
 
-    // CRITICAL: Always validate DB results
-    return UserEntity.parse(result);
-  }
+        // CRITICAL: Always validate DB results
+        return UserEntity.parse(result);
+    }
 }
 ```
 
 **Why this matters:**
+
 - Entities are NOT tied to ORM types
 - Runtime validation ensures type safety
 - Easy to swap query implementations
@@ -206,43 +219,44 @@ export class DrizzleUserRepository {
 ```
 
 **Example:**
+
 ```typescript
 // 1. Validation schema
 // packages/validation/src/user.ts
 export const CreateUserInput = z.object({
-  email: z.string().email(),
-  name: z.string(),
+    email: z.string().email(),
+    name: z.string(),
 });
 
 // 2. API route
 // apps/api/src/routes/users.ts
 const createUserRoute = createRoute({
-  method: 'post',
-  path: '/users',
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: CreateUserInput.openapi('CreateUserInput'),
+    method: 'post',
+    path: '/users',
+    request: {
+        body: {
+            content: {
+                'application/json': {
+                    schema: CreateUserInput.openapi('CreateUserInput'),
+                },
+            },
         },
-      },
     },
-  },
-  responses: {
-    201: {
-      content: {
-        'application/json': {
-          schema: UserEntity.openapi('User'),
+    responses: {
+        201: {
+            content: {
+                'application/json': {
+                    schema: UserEntity.openapi('User'),
+                },
+            },
         },
-      },
     },
-  },
 });
 
 // 3. Frontend usage (fully typed!)
 // apps/web/components/CreateUser.tsx
 const { data, error } = await api.POST('/users', {
-  body: { email: 'test@example.com', name: 'Test' }
+    body: { email: 'test@example.com', name: 'Test' },
 });
 // data is typed as User | undefined
 ```
@@ -250,39 +264,42 @@ const { data, error } = await api.POST('/users', {
 ### 4. Authorization Pattern (CASL)
 
 **Define abilities:**
+
 ```typescript
 // packages/authorization/src/abilities.ts
 export function defineAbilitiesFor(user: User) {
-  return defineAbility((can, cannot) => {
-    if (user.role === 'admin') {
-      can('manage', 'all');
-    } else {
-      can('read', 'Post', { published: true });
-      can(['update', 'delete'], 'Post', { authorId: user.id });
-    }
-  });
+    return defineAbility((can, cannot) => {
+        if (user.role === 'admin') {
+            can('manage', 'all');
+        } else {
+            can('read', 'Post', { published: true });
+            can(['update', 'delete'], 'Post', { authorId: user.id });
+        }
+    });
 }
 ```
 
 **Enforce on backend:**
+
 ```typescript
 // apps/api/src/routes/posts.ts
 app.delete('/posts/:id', async (c) => {
-  const user = c.get('user');
-  const ability = defineAbilitiesFor(user);
+    const user = c.get('user');
+    const ability = defineAbilitiesFor(user);
 
-  const post = await postRepo.findById(c.req.param('id'));
+    const post = await postRepo.findById(c.req.param('id'));
 
-  if (!ability.can('delete', subject('Post', post))) {
-    return c.json({ error: 'Forbidden' }, 403);
-  }
+    if (!ability.can('delete', subject('Post', post))) {
+        return c.json({ error: 'Forbidden' }, 403);
+    }
 
-  await postRepo.delete(post.id);
-  return c.json({ success: true });
+    await postRepo.delete(post.id);
+    return c.json({ success: true });
 });
 ```
 
 **Optimistic checks on frontend:**
+
 ```typescript
 // apps/web/components/PostActions.tsx
 const ability = defineAbilitiesFor(user);
@@ -303,27 +320,30 @@ return (
 ### Starting a New Feature
 
 **1. Create feature branch:**
+
 ```bash
 git checkout -b feature/user-authentication
 ```
 
 **2. Write test first (TDD):**
+
 ```typescript
 // apps/api/src/repositories/user.repository.test.ts
 describe('UserRepository', () => {
-  it('should create user with hashed password', async () => {
-    const user = await userRepo.create({
-      email: 'test@example.com',
-      password: 'plaintext',
-    });
+    it('should create user with hashed password', async () => {
+        const user = await userRepo.create({
+            email: 'test@example.com',
+            password: 'plaintext',
+        });
 
-    expect(user.id).toBeDefined();
-    expect(user.password).not.toBe('plaintext'); // Should be hashed
-  });
+        expect(user.id).toBeDefined();
+        expect(user.password).not.toBe('plaintext'); // Should be hashed
+    });
 });
 ```
 
 **3. Implement to pass test:**
+
 ```typescript
 // apps/api/src/repositories/user.repository.ts
 async create(data: CreateUserData): Promise<User> {
@@ -342,6 +362,7 @@ async create(data: CreateUserData): Promise<User> {
 ```
 
 **4. Commit (granular, focused):**
+
 ```bash
 git add apps/api/src/repositories/user.repository.ts
 git add apps/api/src/repositories/user.repository.test.ts
@@ -349,6 +370,7 @@ git commit -m "feat(api): add password hashing to user creation"
 ```
 
 **5. Update documentation if needed:**
+
 ```bash
 # If adding new pattern or changing architecture
 git add docs/ARCHITECTURE.md
@@ -356,6 +378,7 @@ git commit -m "docs(architecture): document password hashing approach"
 ```
 
 **6. Continue with next small piece:**
+
 ```bash
 # Next commit: Add login endpoint
 # Next commit: Add session management
@@ -365,11 +388,13 @@ git commit -m "docs(architecture): document password hashing approach"
 ### Adding a New Package
 
 **Only add packages that are:**
+
 1. Shared between multiple apps
 2. Approved in REQUIREMENTS.md
 3. Have clear, singular purpose
 
 **Process:**
+
 ```bash
 # 1. Create package structure
 mkdir -p packages/@kit/new-package/src
@@ -402,6 +427,7 @@ EOF
 ### Database Migrations
 
 **Workflow:**
+
 ```bash
 # 1. Update Drizzle schema
 # Edit: packages/database/src/schema/users.ts
@@ -428,60 +454,65 @@ git commit -m "feat(database): add email_verified column to users"
 ### Adding API Endpoints
 
 **1. Define validation schema:**
+
 ```typescript
 // packages/validation/src/user.ts
 export const UpdateUserInput = z.object({
-  name: z.string().min(2).optional(),
-  bio: z.string().max(500).optional(),
+    name: z.string().min(2).optional(),
+    bio: z.string().max(500).optional(),
 });
 ```
 
 **2. Define route:**
+
 ```typescript
 // apps/api/src/routes/users.ts
 const updateUserRoute = createRoute({
-  method: 'patch',
-  path: '/users/{id}',
-  request: {
-    params: z.object({ id: z.string().uuid() }),
-    body: {
-      content: {
-        'application/json': {
-          schema: UpdateUserInput.openapi('UpdateUserInput'),
+    method: 'patch',
+    path: '/users/{id}',
+    request: {
+        params: z.object({ id: z.string().uuid() }),
+        body: {
+            content: {
+                'application/json': {
+                    schema: UpdateUserInput.openapi('UpdateUserInput'),
+                },
+            },
         },
-      },
     },
-  },
-  responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: UserEntity.openapi('User'),
+    responses: {
+        200: {
+            content: {
+                'application/json': {
+                    schema: UserEntity.openapi('User'),
+                },
+            },
         },
-      },
     },
-  },
 });
 ```
 
 **3. Implement handler:**
+
 ```typescript
 app.openapi(updateUserRoute, async (c) => {
-  const { id } = c.req.valid('param');
-  const data = c.req.valid('json');
+    const { id } = c.req.valid('param');
+    const data = c.req.valid('json');
 
-  const user = await userRepository.update(id, data);
+    const user = await userRepository.update(id, data);
 
-  return c.json(user);
+    return c.json(user);
 });
 ```
 
 **4. Regenerate client:**
+
 ```bash
 pnpm generate:client
 ```
 
 **5. Commit:**
+
 ```bash
 git add packages/validation/src/user.ts
 git add apps/api/src/routes/users.ts
@@ -496,6 +527,7 @@ git commit -m "feat(api): add PATCH /users/:id endpoint"
 ### Test Types
 
 **Unit Tests (In-Memory):**
+
 ```typescript
 // Use in-memory repositories
 const userRepo = new InMemoryUserRepository();
@@ -505,11 +537,12 @@ const service = new UserService(userRepo);
 ```
 
 **Integration Tests (Testcontainers):**
+
 ```typescript
 // Real Postgres in Docker
 const container = await new GenericContainer('postgres:16')
-  .withEnvironment({ POSTGRES_PASSWORD: 'test' })
-  .start();
+    .withEnvironment({ POSTGRES_PASSWORD: 'test' })
+    .start();
 
 const db = await createDatabase(connectionString);
 const userRepo = new DrizzleUserRepository(db);
@@ -518,18 +551,20 @@ const userRepo = new DrizzleUserRepository(db);
 ```
 
 **E2E Tests (Playwright):**
+
 ```typescript
 // Full user flow
 test('user can sign up and log in', async ({ page }) => {
-  await page.goto('/signup');
-  await page.fill('[name=email]', 'test@example.com');
-  // ...
+    await page.goto('/signup');
+    await page.fill('[name=email]', 'test@example.com');
+    // ...
 });
 ```
 
 ### Test File Organization
 
 **Co-locate tests:**
+
 ```
 src/
 ├── repositories/
@@ -541,6 +576,7 @@ src/
 ```
 
 **E2E tests separate:**
+
 ```
 tests/
 └── e2e/
@@ -597,20 +633,20 @@ pnpm generate:client
 ```typescript
 // Middleware
 app.use('/api/*', async (c, next) => {
-  const session = await getSession(c);
+    const session = await getSession(c);
 
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+    if (!session) {
+        return c.json({ error: 'Unauthorized' }, 401);
+    }
 
-  c.set('user', session.user);
-  await next();
+    c.set('user', session.user);
+    await next();
 });
 
 // Protected route
 app.get('/api/me', async (c) => {
-  const user = c.get('user'); // Guaranteed to exist
-  return c.json(user);
+    const user = c.get('user'); // Guaranteed to exist
+    return c.json(user);
 });
 ```
 
@@ -619,30 +655,30 @@ app.get('/api/me', async (c) => {
 ```typescript
 // Define error types
 export class NotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'NotFoundError';
-  }
+    constructor(message: string) {
+        super(message);
+        this.name = 'NotFoundError';
+    }
 }
 
 // Throw in service/repository
 if (!user) {
-  throw new NotFoundError('User not found');
+    throw new NotFoundError('User not found');
 }
 
 // Handle in error middleware
 app.onError((err, c) => {
-  if (err instanceof NotFoundError) {
-    return c.json({ error: err.message }, 404);
-  }
+    if (err instanceof NotFoundError) {
+        return c.json({ error: err.message }, 404);
+    }
 
-  if (err instanceof z.ZodError) {
-    return c.json({ error: 'Validation failed', details: err.errors }, 400);
-  }
+    if (err instanceof z.ZodError) {
+        return c.json({ error: 'Validation failed', details: err.errors }, 400);
+    }
 
-  // Log unexpected errors
-  console.error(err);
-  return c.json({ error: 'Internal server error' }, 500);
+    // Log unexpected errors
+    console.error(err);
+    return c.json({ error: 'Internal server error' }, 500);
 });
 ```
 
@@ -709,31 +745,34 @@ BREAKING CHANGE: User API now returns createdAt as ISO string instead of timesta
 ### TypeScript
 
 **Use strict mode:**
+
 ```json
 // tsconfig.json
 {
-  "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
-  }
+    "compilerOptions": {
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitOverride": true
+    }
 }
 ```
 
 **Prefer explicit types for public APIs:**
+
 ```typescript
 // Good
 export function createUser(data: CreateUserInput): Promise<User> {
-  // ...
+    // ...
 }
 
 // Avoid
 export function createUser(data) {
-  // ...
+    // ...
 }
 ```
 
 **Use Zod for runtime validation:**
+
 ```typescript
 // Always validate external data
 const input = CreateUserInput.parse(req.body);
@@ -742,6 +781,7 @@ const input = CreateUserInput.parse(req.body);
 ### Naming Conventions
 
 **Files:**
+
 - `kebab-case.ts` for files
 - `.test.ts` suffix for tests
 - `.entity.ts` for entities
@@ -749,11 +789,13 @@ const input = CreateUserInput.parse(req.body);
 - `.service.ts` for services
 
 **Variables/Functions:**
+
 - `camelCase` for variables and functions
 - `PascalCase` for classes and types
 - `UPPER_SNAKE_CASE` for constants
 
 **Interfaces/Types:**
+
 ```typescript
 // Good
 type User = { ... };
@@ -766,6 +808,7 @@ interface IUserRepository { ... } // Don't do this
 ### Imports
 
 **Order:**
+
 ```typescript
 // 1. External dependencies
 import { z } from 'zod';
@@ -781,6 +824,7 @@ import type { User } from '../entities/user.entity';
 ```
 
 **Use type imports when possible:**
+
 ```typescript
 import type { User } from '../entities/user.entity';
 ```
@@ -792,6 +836,7 @@ import type { User } from '../entities/user.entity';
 ### Common Issues
 
 **Issue: Workspace package not found**
+
 ```bash
 # Solution: Rebuild packages
 pnpm build
@@ -801,12 +846,14 @@ pnpm --filter @kit/validation build
 ```
 
 **Issue: Types not updating after OpenAPI change**
+
 ```bash
 # Solution: Regenerate client
 pnpm generate:client
 ```
 
 **Issue: Migration fails**
+
 ```bash
 # Check current migration status
 pnpm db:studio
@@ -819,6 +866,7 @@ pnpm db:migrate
 ```
 
 **Issue: Tests fail with DB errors**
+
 ```bash
 # Ensure Testcontainers is working
 docker ps
@@ -833,6 +881,7 @@ docker info
 ### Logging
 
 **Development:**
+
 ```typescript
 // Use console.log/error for now
 console.log('User created:', user);
@@ -840,6 +889,7 @@ console.error('Failed to create user:', error);
 ```
 
 **Production (future):**
+
 ```typescript
 // TODO: Replace with structured logging
 import { logger } from '@kit/logger';
@@ -854,21 +904,25 @@ logger.error('Failed to create user', { error });
 ### When to Update Docs
 
 **REQUIREMENTS.md:**
+
 - Adding/removing features
 - Changing tech stack
 - Updating roadmap
 
 **ARCHITECTURE.md:**
+
 - Changing architectural patterns
 - Adding new layers/packages
 - Modifying data flow
 
 **ADRs (docs/decisions/):**
+
 - Making significant technical decisions
 - Choosing between alternatives
 - Documenting "why" behind choices
 
 **README.md:**
+
 - Changing setup process
 - Adding/removing scripts
 - Updating quick start
@@ -876,11 +930,13 @@ logger.error('Failed to create user', { error });
 ### Creating ADRs
 
 **When to create:**
+
 - Choosing technologies (Hono vs Express)
 - Architectural patterns (Repository pattern)
 - Major refactors (changing auth system)
 
 **Template:**
+
 ```markdown
 # ADR XXX: Title
 
@@ -888,18 +944,23 @@ logger.error('Failed to create user', { error });
 **Date:** YYYY-MM-DD
 
 ## Context
+
 What problem are we solving?
 
 ## Decision
+
 What did we decide?
 
 ## Rationale
+
 Why this over alternatives?
 
 ## Consequences
+
 Positive, negative, neutral outcomes
 
 ## Alternatives Considered
+
 What else did we consider and why not?
 ```
 
@@ -909,13 +970,14 @@ What else did we consider and why not?
 
 ### Workspace Protocol
 
-**Always use workspace:* for internal packages:**
+**Always use workspace:\* for internal packages:**
+
 ```json
 {
-  "dependencies": {
-    "@kit/validation": "workspace:*",
-    "@kit/database": "workspace:*"
-  }
+    "dependencies": {
+        "@kit/validation": "workspace:*",
+        "@kit/database": "workspace:*"
+    }
 }
 ```
 
@@ -924,12 +986,14 @@ What else did we consider and why not?
 ### External Dependencies
 
 **Check before adding:**
+
 1. Is it necessary?
 2. Is it maintained?
 3. Is it well-documented?
 4. Does it align with our stack?
 
 **Add dependency:**
+
 ```bash
 # Add to specific package
 pnpm --filter @kit/validation add zod
@@ -948,36 +1012,37 @@ pnpm --filter @kit/api add hono
 When starting a new Claude session, ensure you:
 
 1. **Read these docs:**
-   - REQUIREMENTS.md
-   - ARCHITECTURE.md
-   - This file (BETTER-CLAUDE.md)
-   - Recent ADRs
+    - REQUIREMENTS.md
+    - ARCHITECTURE.md
+    - This file (BETTER-CLAUDE.md)
+    - Recent ADRs
 
 2. **Check project state:**
-   - What's implemented?
-   - What tests exist?
-   - What's the current git status?
+    - What's implemented?
+    - What tests exist?
+    - What's the current git status?
 
 3. **Understand the goal:**
-   - What feature are we building?
-   - What's the acceptance criteria?
-   - Are there tests to guide implementation?
+    - What feature are we building?
+    - What's the acceptance criteria?
+    - Are there tests to guide implementation?
 
 4. **Plan approach:**
-   - Break down into small commits
-   - Identify test cases first
-   - Check if docs need updates
+    - Break down into small commits
+    - Identify test cases first
+    - Check if docs need updates
 
 5. **Ask questions:**
-   - Unclear requirements?
-   - Ambiguous patterns?
-   - Need user input?
+    - Unclear requirements?
+    - Ambiguous patterns?
+    - Need user input?
 
 ---
 
 ## Phase 1: MVP Implementation Checklist
 
 ### Initial Setup (Next Session)
+
 - [ ] Initialize pnpm workspace
 - [ ] Set up Turborepo
 - [ ] Configure TypeScript (base, nextjs, node)
@@ -986,17 +1051,20 @@ When starting a new Claude session, ensure you:
 - [ ] Create basic README
 
 ### Package: @kit/config
+
 - [ ] TypeScript configs (base, nextjs, node)
 - [ ] ESLint config
 - [ ] Prettier config
 
 ### Package: @kit/validation
+
 - [ ] User validation schemas
 - [ ] Auth validation schemas
 - [ ] Shared constants (roles, etc.)
 - [ ] Tests for schemas
 
 ### Package: @kit/database
+
 - [ ] Database client setup
 - [ ] Drizzle config
 - [ ] Initial schema (users, sessions, accounts, verifications)
@@ -1004,17 +1072,20 @@ When starting a new Claude session, ensure you:
 - [ ] Seed data script
 
 ### Package: @kit/auth
+
 - [ ] Better Auth config
 - [ ] Client utilities
 - [ ] Password validation
 - [ ] Tests
 
 ### Package: @kit/authorization
+
 - [ ] CASL ability definitions
 - [ ] Role constants
 - [ ] Tests for abilities
 
 ### App: API (Basic)
+
 - [ ] Hono app setup
 - [ ] Middleware (CORS, logger)
 - [ ] DI/composition root
@@ -1023,6 +1094,7 @@ When starting a new Claude session, ensure you:
 - [ ] Tests for app setup
 
 ### App: API (Auth)
+
 - [ ] User repository (Drizzle + In-memory)
 - [ ] User repository tests
 - [ ] Auth routes (register, login, logout)
@@ -1031,17 +1103,20 @@ When starting a new Claude session, ensure you:
 - [ ] Password reset flow
 
 ### Package: @kit/api-client
+
 - [ ] Client generation script
 - [ ] Generated types from API
 - [ ] Client factory function
 
 ### App: Web (Basic)
+
 - [ ] Next.js app setup
 - [ ] Basic layout
 - [ ] API client integration
 - [ ] Better Auth client setup
 
 ### App: Web (Auth)
+
 - [ ] Sign up page + form
 - [ ] Login page + form
 - [ ] Email verification page
@@ -1050,12 +1125,14 @@ When starting a new Claude session, ensure you:
 - [ ] Tests
 
 ### Testing Infrastructure
+
 - [ ] Vitest config
 - [ ] Playwright config
 - [ ] Testcontainers setup
 - [ ] E2E test: signup + login flow
 
 ### CI/CD
+
 - [ ] GitHub Actions workflow
 - [ ] Run tests on PR
 - [ ] Run linting
@@ -1063,6 +1140,7 @@ When starting a new Claude session, ensure you:
 - [ ] Branch protection rules
 
 ### Documentation
+
 - [ ] DEVELOPMENT.md (setup guide)
 - [ ] TESTING.md (testing guide)
 - [ ] Update README with current state

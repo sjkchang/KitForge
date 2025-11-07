@@ -73,6 +73,7 @@
 ### Request Flow
 
 **API Request:**
+
 ```
 1. Client makes request → openapi-fetch (type-safe)
 2. Hono receives request → validates with Zod
@@ -86,6 +87,7 @@
 ```
 
 **Next.js Server Component:**
+
 ```
 1. Server Component renders
 2. (Optional) Direct DB query for performance-critical data
@@ -100,6 +102,7 @@
 ### 1. Separation of Concerns
 
 **Layered Architecture:**
+
 ```
 Routes (HTTP)
     ↓ (calls)
@@ -111,6 +114,7 @@ Database
 ```
 
 **Each layer:**
+
 - Has single responsibility
 - Depends only on layer below
 - Can be tested independently
@@ -118,10 +122,11 @@ Database
 ### 2. Dependency Inversion
 
 **High-level modules don't depend on low-level modules:**
+
 ```typescript
 // Good: Service depends on interface
 class UserService {
-  constructor(private userRepo: UserRepository) {}
+    constructor(private userRepo: UserRepository) {}
 }
 
 // Repository is injected
@@ -136,11 +141,13 @@ const testUserService = new UserService(testUserRepo);
 ### 3. Fail-Fast Validation
 
 **Validate at boundaries:**
+
 - Input validation at API routes (Zod)
 - Entity validation at repository layer (Zod)
 - Form validation on frontend (Zod)
 
 **Runtime safety:**
+
 ```typescript
 // Never trust DB results
 const result = await db.query.users.findFirst(...);
@@ -150,6 +157,7 @@ return UserEntity.parse(result); // Runtime validation
 ### 4. Type Safety End-to-End
 
 **Single source of truth:**
+
 ```
 Zod Schema (@kit/validation)
     ↓
@@ -163,6 +171,7 @@ Frontend Type-safe Client (openapi-fetch)
 ### 5. Test-Driven Development
 
 **Write tests first:**
+
 1. Define expected behavior
 2. Write failing test
 3. Implement minimum to pass
@@ -176,6 +185,7 @@ Frontend Type-safe Client (openapi-fetch)
 ### Hono HTTP Framework
 
 **Why Hono:**
+
 - Ultralight (< 10KB)
 - Blazing fast
 - Works everywhere (Node, Bun, Cloudflare Workers, Deno)
@@ -184,6 +194,7 @@ Frontend Type-safe Client (openapi-fetch)
 - Easy to learn
 
 **Key Features Used:**
+
 ```typescript
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -198,99 +209,103 @@ app.use('*', csrf());
 
 // Context variables
 app.use('*', async (c, next) => {
-  c.set('user', await getUser(c));
-  await next();
+    c.set('user', await getUser(c));
+    await next();
 });
 
 // Type-safe context
 app.get('/me', (c) => {
-  const user = c.get('user'); // Fully typed!
-  return c.json(user);
+    const user = c.get('user'); // Fully typed!
+    return c.json(user);
 });
 ```
 
 ### @hono/zod-openapi
 
 **Integration:**
+
 ```typescript
 import { createRoute, z } from '@hono/zod-openapi';
 
 // Define route with Zod schemas
 const getUserRoute = createRoute({
-  method: 'get',
-  path: '/users/{id}',
-  request: {
-    params: z.object({
-      id: z.string().uuid(),
-    }),
-  },
-  responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: UserSchema.openapi('User'),
-        },
-      },
-      description: 'Get user by ID',
+    method: 'get',
+    path: '/users/{id}',
+    request: {
+        params: z.object({
+            id: z.string().uuid(),
+        }),
     },
-    404: {
-      content: {
-        'application/json': {
-          schema: ErrorSchema.openapi('Error'),
+    responses: {
+        200: {
+            content: {
+                'application/json': {
+                    schema: UserSchema.openapi('User'),
+                },
+            },
+            description: 'Get user by ID',
         },
-      },
-      description: 'User not found',
+        404: {
+            content: {
+                'application/json': {
+                    schema: ErrorSchema.openapi('Error'),
+                },
+            },
+            description: 'User not found',
+        },
     },
-  },
 });
 
 // Implement route
 app.openapi(getUserRoute, async (c) => {
-  const { id } = c.req.valid('param'); // Validated and typed!
-  const user = await userRepo.findById(id);
+    const { id } = c.req.valid('param'); // Validated and typed!
+    const user = await userRepo.findById(id);
 
-  if (!user) {
-    return c.json({ error: 'User not found' }, 404);
-  }
+    if (!user) {
+        return c.json({ error: 'User not found' }, 404);
+    }
 
-  return c.json(user, 200);
+    return c.json(user, 200);
 });
 
 // OpenAPI spec auto-generated
 app.doc('/openapi.json', {
-  openapi: '3.0.0',
-  info: {
-    version: '1.0.0',
-    title: 'SaaS API',
-  },
+    openapi: '3.0.0',
+    info: {
+        version: '1.0.0',
+        title: 'SaaS API',
+    },
 });
 ```
 
 ### Drizzle ORM
 
 **Purpose:** Schema definition and migrations ONLY
+
 - NOT used for all queries (developer's choice)
 - Provides type-safe schema
 - Generates SQL migrations
 - Can be used for queries, but not required
 
 **Schema Definition:**
+
 ```typescript
 // packages/database/src/schema/users.ts
 import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: text('email').notNull().unique(),
-  emailVerified: boolean('email_verified').default(false),
-  name: text('name'),
-  role: text('role').notNull().default('user'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text('email').notNull().unique(),
+    emailVerified: boolean('email_verified').default(false),
+    name: text('name'),
+    role: text('role').notNull().default('user'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 ```
 
 **Migration Workflow:**
+
 ```bash
 # 1. Update schema
 # Edit packages/database/src/schema/*.ts
@@ -311,45 +326,47 @@ git commit -m "feat(database): add email_verified to users"
 ### Better Auth
 
 **Configuration:**
+
 ```typescript
 // packages/auth/src/config.ts
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
 export function createAuthConfig(db: Database) {
-  return betterAuth({
-    database: drizzleAdapter(db, {
-      provider: 'pg',
-    }),
-    emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: true,
-    },
-    socialProviders: {
-      google: {
-        clientId: process.env.GOOGLE_CLIENT_ID!,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      },
-      github: {
-        clientId: process.env.GITHUB_CLIENT_ID!,
-        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      },
-    },
-    session: {
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
-      updateAge: 60 * 60 * 24, // 1 day
-    },
-  });
+    return betterAuth({
+        database: drizzleAdapter(db, {
+            provider: 'pg',
+        }),
+        emailAndPassword: {
+            enabled: true,
+            requireEmailVerification: true,
+        },
+        socialProviders: {
+            google: {
+                clientId: process.env.GOOGLE_CLIENT_ID!,
+                clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            },
+            github: {
+                clientId: process.env.GITHUB_CLIENT_ID!,
+                clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+            },
+        },
+        session: {
+            expiresIn: 60 * 60 * 24 * 7, // 7 days
+            updateAge: 60 * 60 * 24, // 1 day
+        },
+    });
 }
 ```
 
 **Client Usage:**
+
 ```typescript
 // apps/web/lib/auth.ts
 import { createAuthClient } from 'better-auth/react';
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
 // In components
@@ -359,80 +376,74 @@ const { user, signOut } = authClient.useSession();
 ### CASL Authorization
 
 **Ability Definition:**
+
 ```typescript
 // packages/authorization/src/abilities.ts
 import { defineAbility, MongoAbility } from '@casl/ability';
 import type { User } from '@kit/validation';
 
-export type Actions =
-  | 'create'
-  | 'read'
-  | 'update'
-  | 'delete'
-  | 'manage';
+export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
 
 export type Subjects =
-  | 'User'
-  | 'Post'
-  | 'Subscription'
-  | 'Organization'
-  | 'all';
+    | 'User'
+    | 'Post'
+    | 'Subscription'
+    | 'Organization'
+    | 'all';
 
 export type AppAbility = MongoAbility<[Actions, Subjects]>;
 
 export function defineAbilitiesFor(user: User): AppAbility {
-  return defineAbility<AppAbility>((can, cannot) => {
-    // Everyone can read their own user
-    can('read', 'User', { id: user.id });
-    can('update', 'User', { id: user.id });
+    return defineAbility<AppAbility>((can, cannot) => {
+        // Everyone can read their own user
+        can('read', 'User', { id: user.id });
+        can('update', 'User', { id: user.id });
 
-    if (user.role === 'admin') {
-      // Admins can do everything
-      can('manage', 'all');
-    } else if (user.role === 'premium' || user.role === 'pro') {
-      // Premium users
-      can('create', 'Post');
-      can(['read', 'update', 'delete'], 'Post', { authorId: user.id });
-      can('read', 'Post', { published: true });
-    } else {
-      // Free users
-      can('read', 'Post', { published: true });
-      // Limit creation
-      can('create', 'Post'); // Check quota in service layer
-    }
-  });
+        if (user.role === 'admin') {
+            // Admins can do everything
+            can('manage', 'all');
+        } else if (user.role === 'premium' || user.role === 'pro') {
+            // Premium users
+            can('create', 'Post');
+            can(['read', 'update', 'delete'], 'Post', { authorId: user.id });
+            can('read', 'Post', { published: true });
+        } else {
+            // Free users
+            can('read', 'Post', { published: true });
+            // Limit creation
+            can('create', 'Post'); // Check quota in service layer
+        }
+    });
 }
 ```
 
 **Backend Enforcement:**
+
 ```typescript
 // apps/api/src/middleware/authorize.ts
 import { defineAbilitiesFor } from '@kit/authorization';
 
 export function requireAbility(action: Actions, subject: Subjects) {
-  return async (c: Context, next: Next) => {
-    const user = c.get('user');
+    return async (c: Context, next: Next) => {
+        const user = c.get('user');
 
-    if (!user) {
-      return c.json({ error: 'Unauthorized' }, 401);
-    }
+        if (!user) {
+            return c.json({ error: 'Unauthorized' }, 401);
+        }
 
-    const ability = defineAbilitiesFor(user);
+        const ability = defineAbilitiesFor(user);
 
-    if (!ability.can(action, subject)) {
-      return c.json({ error: 'Forbidden' }, 403);
-    }
+        if (!ability.can(action, subject)) {
+            return c.json({ error: 'Forbidden' }, 403);
+        }
 
-    c.set('ability', ability);
-    await next();
-  };
+        c.set('ability', ability);
+        await next();
+    };
 }
 
 // Usage in routes
-app.delete(
-  '/posts/:id',
-  requireAbility('delete', 'Post'),
-  async (c) => {
+app.delete('/posts/:id', requireAbility('delete', 'Post'), async (c) => {
     const { id } = c.req.param();
     const user = c.get('user');
     const ability = c.get('ability');
@@ -440,21 +451,21 @@ app.delete(
     const post = await postRepo.findById(id);
 
     if (!post) {
-      return c.json({ error: 'Not found' }, 404);
+        return c.json({ error: 'Not found' }, 404);
     }
 
     // Check specific instance
     if (!ability.can('delete', subject('Post', post))) {
-      return c.json({ error: 'Forbidden' }, 403);
+        return c.json({ error: 'Forbidden' }, 403);
     }
 
     await postRepo.delete(id);
     return c.json({ success: true });
-  }
-);
+});
 ```
 
 **Frontend Optimistic Checks:**
+
 ```typescript
 // apps/web/components/PostActions.tsx
 import { defineAbilitiesFor } from '@kit/authorization';
@@ -526,6 +537,7 @@ apps/marketing
 **Purpose:** Shared validation schemas and constants
 
 **Exports:**
+
 ```typescript
 // Validation schemas (used by API and frontend)
 export const CreateUserInput: z.ZodSchema;
@@ -549,6 +561,7 @@ export type CreateUserInput = z.infer<typeof CreateUserInput>;
 **Purpose:** Database client, schema, migrations
 
 **Exports:**
+
 ```typescript
 // Database client factory
 export function createDatabase(config: DatabaseConfig): Database;
@@ -569,6 +582,7 @@ export { migrate } from 'drizzle-orm/node-postgres/migrator';
 **Purpose:** Better Auth configuration
 
 **Exports:**
+
 ```typescript
 // Server config
 export function createAuthConfig(db: Database): BetterAuthConfig;
@@ -590,6 +604,7 @@ export function validatePasswordStrength(password: string): boolean;
 **Purpose:** CASL ability definitions
 
 **Exports:**
+
 ```typescript
 // Ability builder
 export function defineAbilitiesFor(user: User, context?: AuthContext): AppAbility;
@@ -612,34 +627,36 @@ export const Roles = { ... };
 **Purpose:** Type-safe API client
 
 **Structure:**
+
 ```typescript
 // packages/api-client/src/index.ts
 import createClient from 'openapi-fetch';
 import type { paths } from './generated/openapi';
 
 export function createApiClient(baseUrl: string, options?: ClientOptions) {
-  return createClient<paths>({
-    baseUrl,
-    ...options,
-  });
+    return createClient<paths>({
+        baseUrl,
+        ...options,
+    });
 }
 
 export type * from './generated/openapi';
 ```
 
 **Generated types:**
+
 ```typescript
 // Auto-generated from OpenAPI spec
 export interface paths {
-  '/users/{id}': {
-    get: {
-      parameters: { path: { id: string } };
-      responses: {
-        200: { content: { 'application/json': User } };
-        404: { content: { 'application/json': Error } };
-      };
+    '/users/{id}': {
+        get: {
+            parameters: { path: { id: string } };
+            responses: {
+                200: { content: { 'application/json': User } };
+                404: { content: { 'application/json': Error } };
+            };
+        };
     };
-  };
 }
 ```
 
@@ -660,19 +677,20 @@ export interface paths {
 import { z } from 'zod';
 
 export const UserEntity = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  emailVerified: z.boolean(),
-  name: z.string().nullable(),
-  role: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+    id: z.string().uuid(),
+    email: z.string().email(),
+    emailVerified: z.boolean(),
+    name: z.string().nullable(),
+    role: z.string(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
 });
 
 export type User = z.infer<typeof UserEntity>;
 ```
 
 **Why entities are separate:**
+
 - Type safety at runtime
 - Validation of DB results
 - Not dependent on ORM types
@@ -682,77 +700,81 @@ export type User = z.infer<typeof UserEntity>;
 ### Repository Pattern
 
 **Interface (implicit via TypeScript):**
+
 ```typescript
 // apps/api/src/repositories/user.repository.ts
 import type { User } from '../entities/user.entity';
 
 export interface UserRepository {
-  findById(id: string): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
-  create(data: CreateUserData): Promise<User>;
-  update(id: string, data: UpdateUserData): Promise<User>;
-  delete(id: string): Promise<void>;
+    findById(id: string): Promise<User | null>;
+    findByEmail(email: string): Promise<User | null>;
+    create(data: CreateUserData): Promise<User>;
+    update(id: string, data: UpdateUserData): Promise<User>;
+    delete(id: string): Promise<void>;
 }
 ```
 
 **Production Implementation (Drizzle):**
+
 ```typescript
 export class DrizzleUserRepository implements UserRepository {
-  constructor(private db: Database) {}
+    constructor(private db: Database) {}
 
-  async findById(id: string): Promise<User | null> {
-    const result = await this.db.query.users.findFirst({
-      where: eq(users.id, id),
-    });
+    async findById(id: string): Promise<User | null> {
+        const result = await this.db.query.users.findFirst({
+            where: eq(users.id, id),
+        });
 
-    if (!result) return null;
+        if (!result) return null;
 
-    // MUST validate against entity
-    return UserEntity.parse(result);
-  }
+        // MUST validate against entity
+        return UserEntity.parse(result);
+    }
 
-  async create(data: CreateUserData): Promise<User> {
-    const [result] = await this.db
-      .insert(users)
-      .values({
-        email: data.email,
-        name: data.name,
-        role: 'user',
-      })
-      .returning();
+    async create(data: CreateUserData): Promise<User> {
+        const [result] = await this.db
+            .insert(users)
+            .values({
+                email: data.email,
+                name: data.name,
+                role: 'user',
+            })
+            .returning();
 
-    return UserEntity.parse(result);
-  }
+        return UserEntity.parse(result);
+    }
 }
 ```
 
 **Test Implementation (In-Memory):**
+
 ```typescript
 export class InMemoryUserRepository implements UserRepository {
-  private users = new Map<string, User>();
+    private users = new Map<string, User>();
 
-  async findById(id: string): Promise<User | null> {
-    return this.users.get(id) || null;
-  }
+    async findById(id: string): Promise<User | null> {
+        return this.users.get(id) || null;
+    }
 
-  async create(data: CreateUserData): Promise<User> {
-    const user: User = {
-      id: crypto.randomUUID(),
-      email: data.email,
-      name: data.name,
-      emailVerified: false,
-      role: 'user',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    async create(data: CreateUserData): Promise<User> {
+        const user: User = {
+            id: crypto.randomUUID(),
+            email: data.email,
+            name: data.name,
+            emailVerified: false,
+            role: 'user',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
 
-    this.users.set(user.id, user);
-    return user;
-  }
+        this.users.set(user.id, user);
+        return user;
+    }
 }
 ```
 
 **Benefits:**
+
 - Easy to swap implementations
 - Simple to mock in tests
 - DB-agnostic business logic
@@ -767,17 +789,18 @@ export class InMemoryUserRepository implements UserRepository {
 import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: text('email').notNull().unique(),
-  emailVerified: boolean('email_verified').default(false).notNull(),
-  name: text('name'),
-  role: text('role').notNull().default('user'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text('email').notNull().unique(),
+    emailVerified: boolean('email_verified').default(false).notNull(),
+    name: text('name'),
+    role: text('role').notNull().default('user'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 ```
 
 **Migration workflow:**
+
 ```bash
 # 1. Modify schema files
 # 2. Generate migration
@@ -793,6 +816,7 @@ pnpm db:migrate
 ```
 
 **Running migrations:**
+
 ```typescript
 // packages/database/src/migrate.ts
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -812,6 +836,7 @@ await migrate(db, { migrationsFolder: './migrations' });
 ### Route Organization
 
 **Group by domain:**
+
 ```
 apps/api/src/routes/
 ├── users.ts          # User CRUD
@@ -822,6 +847,7 @@ apps/api/src/routes/
 ```
 
 **Route structure:**
+
 ```typescript
 // apps/api/src/routes/users.ts
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
@@ -829,47 +855,48 @@ import { CreateUserInput, UpdateUserInput } from '@kit/validation';
 import type { UserRepository } from '../repositories/user.repository';
 
 export function userRoutes(deps: { userRepository: UserRepository }) {
-  const app = new OpenAPIHono();
+    const app = new OpenAPIHono();
 
-  // Define route
-  const createUserRoute = createRoute({
-    method: 'post',
-    path: '/',
-    request: {
-      body: {
-        content: {
-          'application/json': {
-            schema: CreateUserInput,
-          },
+    // Define route
+    const createUserRoute = createRoute({
+        method: 'post',
+        path: '/',
+        request: {
+            body: {
+                content: {
+                    'application/json': {
+                        schema: CreateUserInput,
+                    },
+                },
+            },
         },
-      },
-    },
-    responses: {
-      201: {
-        content: {
-          'application/json': {
-            schema: UserSchema,
-          },
+        responses: {
+            201: {
+                content: {
+                    'application/json': {
+                        schema: UserSchema,
+                    },
+                },
+                description: 'User created',
+            },
         },
-        description: 'User created',
-      },
-    },
-  });
+    });
 
-  // Implement route
-  app.openapi(createUserRoute, async (c) => {
-    const input = c.req.valid('json');
-    const user = await deps.userRepository.create(input);
-    return c.json(user, 201);
-  });
+    // Implement route
+    app.openapi(createUserRoute, async (c) => {
+        const input = c.req.valid('json');
+        const user = await deps.userRepository.create(input);
+        return c.json(user, 201);
+    });
 
-  return app;
+    return app;
 }
 ```
 
 ### Middleware Stack
 
 **Order matters:**
+
 ```typescript
 // apps/api/src/app.ts
 import { OpenAPIHono } from '@hono/zod-openapi';
@@ -883,10 +910,13 @@ const app = new OpenAPIHono();
 app.use('*', logger());
 
 // 2. CORS (before auth)
-app.use('*', cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || [],
-  credentials: true,
-}));
+app.use(
+    '*',
+    cors({
+        origin: process.env.CORS_ORIGIN?.split(',') || [],
+        credentials: true,
+    }),
+);
 
 // 3. CSRF (for mutations)
 app.use('*', csrf());
@@ -911,42 +941,43 @@ import type { PostRepository } from '../repositories/post.repository';
 import type { UserQuotaRepository } from '../repositories/quota.repository';
 
 export class PostService {
-  constructor(
-    private postRepo: PostRepository,
-    private quotaRepo: UserQuotaRepository
-  ) {}
+    constructor(
+        private postRepo: PostRepository,
+        private quotaRepo: UserQuotaRepository,
+    ) {}
 
-  async createPost(userId: string, data: CreatePostInput): Promise<Post> {
-    // Business logic: Check quota
-    const quota = await this.quotaRepo.getQuota(userId);
+    async createPost(userId: string, data: CreatePostInput): Promise<Post> {
+        // Business logic: Check quota
+        const quota = await this.quotaRepo.getQuota(userId);
 
-    if (quota.postsCreated >= quota.postsLimit) {
-      throw new QuotaExceededError('Post limit reached for your plan');
+        if (quota.postsCreated >= quota.postsLimit) {
+            throw new QuotaExceededError('Post limit reached for your plan');
+        }
+
+        // Create post
+        const post = await this.postRepo.create({
+            ...data,
+            authorId: userId,
+        });
+
+        // Update quota
+        await this.quotaRepo.incrementPostCount(userId);
+
+        return post;
     }
-
-    // Create post
-    const post = await this.postRepo.create({
-      ...data,
-      authorId: userId,
-    });
-
-    // Update quota
-    await this.quotaRepo.incrementPostCount(userId);
-
-    return post;
-  }
 }
 ```
 
 **Routes use services:**
+
 ```typescript
 app.openapi(createPostRoute, async (c) => {
-  const user = c.get('user');
-  const input = c.req.valid('json');
+    const user = c.get('user');
+    const input = c.req.valid('json');
 
-  const post = await postService.createPost(user.id, input);
+    const post = await postService.createPost(user.id, input);
 
-  return c.json(post, 201);
+    return c.json(post, 201);
 });
 ```
 
@@ -1086,11 +1117,13 @@ export function EditProfile({ user }) {
 ### Runtime vs Compile-time Safety
 
 **Compile-time (TypeScript):**
+
 - Frontend knows API response shape
 - Autocomplete for API endpoints
 - Catch errors before runtime
 
 **Runtime (Zod validation):**
+
 - API validates incoming requests
 - Repositories validate DB results
 - Frontend validates form input
@@ -1118,12 +1151,14 @@ export function EditProfile({ user }) {
 ### Unit Tests
 
 **What to test:**
+
 - Pure functions
 - Services (with mocked repos)
 - Utilities
 - Components (isolated)
 
 **Example:**
+
 ```typescript
 // apps/api/src/services/post.service.test.ts
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -1132,46 +1167,51 @@ import { InMemoryPostRepository } from '../repositories/post.repository';
 import { InMemoryUserQuotaRepository } from '../repositories/quota.repository';
 
 describe('PostService', () => {
-  let postService: PostService;
-  let postRepo: InMemoryPostRepository;
-  let quotaRepo: InMemoryUserQuotaRepository;
+    let postService: PostService;
+    let postRepo: InMemoryPostRepository;
+    let quotaRepo: InMemoryUserQuotaRepository;
 
-  beforeEach(() => {
-    postRepo = new InMemoryPostRepository();
-    quotaRepo = new InMemoryUserQuotaRepository();
-    postService = new PostService(postRepo, quotaRepo);
-  });
-
-  it('should create post when under quota', async () => {
-    await quotaRepo.setQuota('user-1', { limit: 10, used: 5 });
-
-    const post = await postService.createPost('user-1', {
-      title: 'Test',
-      content: 'Content',
+    beforeEach(() => {
+        postRepo = new InMemoryPostRepository();
+        quotaRepo = new InMemoryUserQuotaRepository();
+        postService = new PostService(postRepo, quotaRepo);
     });
 
-    expect(post.title).toBe('Test');
-    expect(await quotaRepo.getUsed('user-1')).toBe(6);
-  });
+    it('should create post when under quota', async () => {
+        await quotaRepo.setQuota('user-1', { limit: 10, used: 5 });
 
-  it('should throw when quota exceeded', async () => {
-    await quotaRepo.setQuota('user-1', { limit: 10, used: 10 });
+        const post = await postService.createPost('user-1', {
+            title: 'Test',
+            content: 'Content',
+        });
 
-    await expect(
-      postService.createPost('user-1', { title: 'Test', content: 'Content' })
-    ).rejects.toThrow('Post limit reached');
-  });
+        expect(post.title).toBe('Test');
+        expect(await quotaRepo.getUsed('user-1')).toBe(6);
+    });
+
+    it('should throw when quota exceeded', async () => {
+        await quotaRepo.setQuota('user-1', { limit: 10, used: 10 });
+
+        await expect(
+            postService.createPost('user-1', {
+                title: 'Test',
+                content: 'Content',
+            }),
+        ).rejects.toThrow('Post limit reached');
+    });
 });
 ```
 
 ### Integration Tests
 
 **What to test:**
+
 - Repository implementations
 - API endpoints
 - Database interactions
 
 **Example:**
+
 ```typescript
 // apps/api/src/repositories/user.repository.test.ts
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -1182,90 +1222,92 @@ import { Pool } from 'pg';
 import { DrizzleUserRepository } from './user.repository';
 
 describe('DrizzleUserRepository (Integration)', () => {
-  let container: StartedTestContainer;
-  let pool: Pool;
-  let db: Database;
-  let userRepo: DrizzleUserRepository;
+    let container: StartedTestContainer;
+    let pool: Pool;
+    let db: Database;
+    let userRepo: DrizzleUserRepository;
 
-  beforeEach(async () => {
-    // Start Postgres container
-    container = await new GenericContainer('postgres:16')
-      .withEnvironment({ POSTGRES_PASSWORD: 'test', POSTGRES_DB: 'test' })
-      .withExposedPorts(5432)
-      .start();
+    beforeEach(async () => {
+        // Start Postgres container
+        container = await new GenericContainer('postgres:16')
+            .withEnvironment({ POSTGRES_PASSWORD: 'test', POSTGRES_DB: 'test' })
+            .withExposedPorts(5432)
+            .start();
 
-    const connectionString = `postgresql://postgres:test@${container.getHost()}:${container.getMappedPort(5432)}/test`;
+        const connectionString = `postgresql://postgres:test@${container.getHost()}:${container.getMappedPort(5432)}/test`;
 
-    pool = new Pool({ connectionString });
-    db = drizzle(pool);
+        pool = new Pool({ connectionString });
+        db = drizzle(pool);
 
-    // Run migrations
-    await migrate(db, { migrationsFolder: './migrations' });
+        // Run migrations
+        await migrate(db, { migrationsFolder: './migrations' });
 
-    userRepo = new DrizzleUserRepository(db);
-  });
-
-  afterEach(async () => {
-    await pool.end();
-    await container.stop();
-  });
-
-  it('should create and find user', async () => {
-    const created = await userRepo.create({
-      email: 'test@example.com',
-      name: 'Test User',
+        userRepo = new DrizzleUserRepository(db);
     });
 
-    expect(created.id).toBeDefined();
+    afterEach(async () => {
+        await pool.end();
+        await container.stop();
+    });
 
-    const found = await userRepo.findById(created.id);
+    it('should create and find user', async () => {
+        const created = await userRepo.create({
+            email: 'test@example.com',
+            name: 'Test User',
+        });
 
-    expect(found).toEqual(created);
-  });
+        expect(created.id).toBeDefined();
 
-  it('should return null for non-existent user', async () => {
-    const found = await userRepo.findById('non-existent-id');
-    expect(found).toBeNull();
-  });
+        const found = await userRepo.findById(created.id);
+
+        expect(found).toEqual(created);
+    });
+
+    it('should return null for non-existent user', async () => {
+        const found = await userRepo.findById('non-existent-id');
+        expect(found).toBeNull();
+    });
 });
 ```
 
 ### E2E Tests
 
 **What to test:**
+
 - Critical user journeys
 - Multi-step flows
 - Full stack integration
 
 **Example:**
+
 ```typescript
 // tests/e2e/auth.spec.ts
 import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Flow', () => {
-  test('user can sign up, verify email, and log in', async ({ page }) => {
-    // Sign up
-    await page.goto('/signup');
-    await page.fill('[name=email]', 'newuser@example.com');
-    await page.fill('[name=password]', 'SecurePassword123');
-    await page.fill('[name=name]', 'New User');
-    await page.click('button[type=submit]');
+    test('user can sign up, verify email, and log in', async ({ page }) => {
+        // Sign up
+        await page.goto('/signup');
+        await page.fill('[name=email]', 'newuser@example.com');
+        await page.fill('[name=password]', 'SecurePassword123');
+        await page.fill('[name=name]', 'New User');
+        await page.click('button[type=submit]');
 
-    // Should show email verification message
-    await expect(page.locator('text=Check your email')).toBeVisible();
+        // Should show email verification message
+        await expect(page.locator('text=Check your email')).toBeVisible();
 
-    // TODO: Verify email (need email testing strategy)
+        // TODO: Verify email (need email testing strategy)
 
-    // Log in
-    await page.goto('/login');
-    await page.fill('[name=email]', 'newuser@example.com');
-    await page.fill('[name=password]', 'SecurePassword123');
-    await page.click('button[type=submit]');
+        // Log in
+        await page.goto('/login');
+        await page.fill('[name=email]', 'newuser@example.com');
+        await page.fill('[name=password]', 'SecurePassword123');
+        await page.click('button[type=submit]');
 
-    // Should redirect to dashboard
-    await expect(page).toHaveURL('/dashboard');
-    await expect(page.locator('text=Welcome')).toBeVisible();
-  });
+        // Should redirect to dashboard
+        await expect(page).toHaveURL('/dashboard');
+        await expect(page.locator('text=Welcome')).toBeVisible();
+    });
 });
 ```
 
@@ -1278,31 +1320,31 @@ test.describe('Authentication Flow', () => {
 ```json
 // turbo.json
 {
-  "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env.*local"],
-  "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", ".astro/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "test": {
-      "dependsOn": ["build"],
-      "cache": false
-    },
-    "test:unit": {
-      "outputs": ["coverage/**"]
-    },
-    "lint": {
-      "dependsOn": ["^build"]
-    },
-    "typecheck": {
-      "dependsOn": ["^build"]
+    "$schema": "https://turbo.build/schema.json",
+    "globalDependencies": ["**/.env.*local"],
+    "tasks": {
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": ["dist/**", ".next/**", ".astro/**"]
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "test": {
+            "dependsOn": ["build"],
+            "cache": false
+        },
+        "test:unit": {
+            "outputs": ["coverage/**"]
+        },
+        "lint": {
+            "dependsOn": ["^build"]
+        },
+        "typecheck": {
+            "dependsOn": ["^build"]
+        }
     }
-  }
 }
 ```
 
@@ -1400,26 +1442,31 @@ pnpm generate:client   # Generate TypeScript types from OpenAPI
 ## Security Considerations
 
 ### Input Validation
+
 - All API inputs validated with Zod
 - SQL injection prevented by parameterized queries
 - XSS prevented by React auto-escaping
 
 ### Authentication
+
 - Secure session management (Better Auth)
 - Password hashing (bcrypt)
 - Email verification required
 - Rate limiting on auth endpoints
 
 ### Authorization
+
 - All mutations require authentication
 - CASL abilities enforced on backend
 - Row-level security for multi-tenant data
 
 ### CSRF Protection
+
 - CSRF tokens for mutations
 - SameSite cookies
 
 ### Rate Limiting
+
 - Per-IP rate limiting
 - Per-user rate limiting
 - Quota enforcement
@@ -1429,16 +1476,19 @@ pnpm generate:client   # Generate TypeScript types from OpenAPI
 ## Performance Considerations
 
 ### Database
+
 - Proper indexing on foreign keys
 - Connection pooling
 - Query optimization
 
 ### Caching
+
 - Turborepo build cache
 - Redis for session cache
 - HTTP caching headers
 
 ### Frontend
+
 - Server Components for initial load
 - Code splitting
 - Image optimization (next/image)
@@ -1449,6 +1499,7 @@ pnpm generate:client   # Generate TypeScript types from OpenAPI
 **End of Architecture Documentation**
 
 For implementation details, see:
+
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - Development setup
 - [TESTING.md](./TESTING.md) - Testing guide
 - [ADRs](./decisions/) - Architecture decisions

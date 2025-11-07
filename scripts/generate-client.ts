@@ -23,11 +23,11 @@ const API_PORT = process.env.API_PORT || 3001;
 const API_URL = `http://localhost:${API_PORT}`;
 const SPEC_PATH = path.join(
     WORKSPACE_ROOT,
-    'packages/@kit/api-client/src/generated/openapi.json'
+    'packages/@kit/api-client/src/generated/openapi.json',
 );
 const TYPES_PATH = path.join(
     WORKSPACE_ROOT,
-    'packages/@kit/api-client/src/generated/openapi.ts'
+    'packages/@kit/api-client/src/generated/openapi.ts',
 );
 
 async function main() {
@@ -71,7 +71,9 @@ async function main() {
         const response = await fetch(`${API_URL}/openapi.json`);
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch OpenAPI spec: ${response.statusText}`);
+            throw new Error(
+                `Failed to fetch OpenAPI spec: ${response.statusText}`,
+            );
         }
 
         const spec = await response.json();
@@ -81,15 +83,21 @@ async function main() {
         console.log('💾 Saving OpenAPI spec...');
         await fs.mkdir(path.dirname(SPEC_PATH), { recursive: true });
         await fs.writeFile(SPEC_PATH, JSON.stringify(spec, null, 2), 'utf-8');
-        console.log(`✅ Saved to ${path.relative(WORKSPACE_ROOT, SPEC_PATH)}\n`);
+        console.log(
+            `✅ Saved to ${path.relative(WORKSPACE_ROOT, SPEC_PATH)}\n`,
+        );
 
         // Step 4: Generate TypeScript types
         console.log('🔨 Generating TypeScript types...');
         await execAsync(
             `pnpm openapi-typescript ${SPEC_PATH} -o ${TYPES_PATH}`,
-            { cwd: WORKSPACE_ROOT }
+            {
+                cwd: WORKSPACE_ROOT,
+            },
         );
-        console.log(`✅ Types generated at ${path.relative(WORKSPACE_ROOT, TYPES_PATH)}\n`);
+        console.log(
+            `✅ Types generated at ${path.relative(WORKSPACE_ROOT, TYPES_PATH)}\n`,
+        );
 
         console.log('🎉 Client generation complete!\n');
     } catch (error) {

@@ -32,16 +32,21 @@ interface OpenAPISpec {
 /**
  * Type guard to check if Better Auth API has OpenAPI plugin enabled
  */
-function hasOpenAPIPlugin(api: any): api is { generateOpenAPISchema: () => Promise<OpenAPISpec> } {
+function hasOpenAPIPlugin(
+    api: any,
+): api is { generateOpenAPISchema: () => Promise<OpenAPISpec> } {
     return typeof api?.generateOpenAPISchema === 'function';
 }
 
 const app = new OpenAPIHono();
 
-app.use('*', cors({
-    origin: config.clients.web.url,
-    credentials: true,
-}));
+app.use(
+    '*',
+    cors({
+        origin: config.clients.web.url,
+        credentials: true,
+    }),
+);
 
 const healthRoute = createRoute({
     method: 'get',
@@ -149,7 +154,8 @@ Requires a valid Bearer token in the Authorization header.`,
             },
         },
         401: {
-            description: 'Authentication required - No valid session or token provided',
+            description:
+                'Authentication required - No valid session or token provided',
             content: {
                 'application/json': {
                     schema: UnauthorizedErrorSchema,
@@ -249,7 +255,16 @@ export function UserProfile() {
 app.use('/api/v1/me', jwtAuth);
 
 app.openapi(getMeRoute, (c) => {
-    const user = c.get('user') as { id: string; name: string; email: string; emailVerified: boolean; image: string | null; role: string; createdAt: Date; updatedAt: Date };
+    const user = c.get('user') as {
+        id: string;
+        name: string;
+        email: string;
+        emailVerified: boolean;
+        image: string | null;
+        role: string;
+        createdAt: Date;
+        updatedAt: Date;
+    };
     return c.json({ user }, 200);
 });
 
@@ -304,7 +319,8 @@ const getUsersRoute = createRoute({
             },
         },
         401: {
-            description: 'Authentication required - No valid session or token provided',
+            description:
+                'Authentication required - No valid session or token provided',
             content: {
                 'application/json': {
                     schema: UnauthorizedErrorSchema,
@@ -316,7 +332,8 @@ const getUsersRoute = createRoute({
             },
         },
         403: {
-            description: 'Forbidden - Admin role required to access this endpoint',
+            description:
+                'Forbidden - Admin role required to access this endpoint',
             content: {
                 'application/json': {
                     schema: ForbiddenErrorSchema,
@@ -328,7 +345,8 @@ const getUsersRoute = createRoute({
             },
         },
         500: {
-            description: 'Internal server error - Failed to fetch users from database',
+            description:
+                'Internal server error - Failed to fetch users from database',
             content: {
                 'application/json': {
                     schema: ErrorResponseSchema,
@@ -508,7 +526,10 @@ API requests are rate-limited to 100 requests per minute per IP address.`,
     servers: [
         {
             url: config.app.url,
-            description: config.env === 'production' ? 'Production server' : 'Development server',
+            description:
+                config.env === 'production'
+                    ? 'Production server'
+                    : 'Development server',
         },
     ],
     tags: [
@@ -535,13 +556,17 @@ app.get('/api/openapi-combined', async (c) => {
 
         if (!apiResponse.ok) {
             console.error('Failed to fetch API spec:', apiResponse.statusText);
-            return c.json({
-                error: 'Failed to fetch API specification',
-                details: 'Could not retrieve the OpenAPI specification from the API server'
-            }, 500);
+            return c.json(
+                {
+                    error: 'Failed to fetch API specification',
+                    details:
+                        'Could not retrieve the OpenAPI specification from the API server',
+                },
+                500,
+            );
         }
 
-        const apiSpec = await apiResponse.json() as OpenAPISpec;
+        const apiSpec = (await apiResponse.json()) as OpenAPISpec;
 
         // Check if Better Auth routes should be included
         if (!config.openapi.include_better_auth_routes) {
@@ -552,16 +577,22 @@ app.get('/api/openapi-combined', async (c) => {
         // Generate Better Auth OpenAPI spec if plugin is enabled
         if (!hasOpenAPIPlugin(auth.api)) {
             console.error('Better Auth OpenAPI plugin not enabled');
-            return c.json({
-                error: 'OpenAPI plugin not configured',
-                details: 'The Better Auth OpenAPI plugin must be enabled in auth configuration'
-            }, 500);
+            return c.json(
+                {
+                    error: 'OpenAPI plugin not configured',
+                    details:
+                        'The Better Auth OpenAPI plugin must be enabled in auth configuration',
+                },
+                500,
+            );
         }
 
         const authSpec = await auth.api.generateOpenAPISchema();
         const authPaths: Record<string, unknown> = {};
         for (const [path, value] of Object.entries(authSpec.paths || {})) {
-            const fixedPath = path.startsWith('/') ? `/api/auth${path}` : `/api/auth/${path}`;
+            const fixedPath = path.startsWith('/')
+                ? `/api/auth${path}`
+                : `/api/auth/${path}`;
             const pathItem = value as Record<string, unknown>;
             const fixedPathItem: Record<string, unknown> = {};
 
@@ -569,8 +600,8 @@ app.get('/api/openapi-combined', async (c) => {
                 const op = operation as Record<string, unknown>;
                 fixedPathItem[method] = {
                     ...op,
-                    tags: (op.tags as string[] || []).map(tag =>
-                        tag === 'Default' ? 'Authentication' : tag
+                    tags: ((op.tags as string[]) || []).map((tag) =>
+                        tag === 'Default' ? 'Authentication' : tag,
                     ),
                 };
             }
@@ -578,10 +609,14 @@ app.get('/api/openapi-combined', async (c) => {
             authPaths[fixedPath] = fixedPathItem;
         }
 
-        const authTags = (authSpec.tags || []).map(tag =>
+        const authTags = (authSpec.tags || []).map((tag) =>
             tag.name === 'Default'
-                ? { name: 'Authentication', description: 'Better Auth endpoints for user authentication and management' }
-                : tag
+                ? {
+                      name: 'Authentication',
+                      description:
+                          'Better Auth endpoints for user authentication and management',
+                  }
+                : tag,
         );
         const combined: OpenAPISpec = {
             ...apiSpec,
@@ -603,10 +638,7 @@ app.get('/api/openapi-combined', async (c) => {
                     ...(authSpec.components?.securitySchemes || {}),
                 },
             },
-            tags: [
-                ...(apiSpec.tags || []),
-                ...authTags,
-            ],
+            tags: [...(apiSpec.tags || []), ...authTags],
         };
 
         return c.json(combined);
@@ -614,7 +646,8 @@ app.get('/api/openapi-combined', async (c) => {
         console.error('Error generating combined OpenAPI spec:', error);
 
         // Provide more detailed error information
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
         const errorStack = error instanceof Error ? error.stack : undefined;
 
         // Log full details for debugging
@@ -622,10 +655,14 @@ app.get('/api/openapi-combined', async (c) => {
             console.error('Stack trace:', errorStack);
         }
 
-        return c.json({
-            error: 'Failed to generate combined OpenAPI specification',
-            details: config.env === 'development' ? errorMessage : undefined,
-        }, 500);
+        return c.json(
+            {
+                error: 'Failed to generate combined OpenAPI specification',
+                details:
+                    config.env === 'development' ? errorMessage : undefined,
+            },
+            500,
+        );
     }
 });
 
@@ -657,7 +694,7 @@ if (config.openapi.enabled) {
                 ogDescription: `Complete API reference for ${PROJECT_CONSTANTS.name}`,
                 ogTitle: `${PROJECT_CONSTANTS.name} API`,
             },
-        } as Parameters<typeof Scalar>[0])
+        } as Parameters<typeof Scalar>[0]),
     );
 }
 

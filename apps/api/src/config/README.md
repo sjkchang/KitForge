@@ -32,15 +32,15 @@ config/
 import { config, PROJECT_CONSTANTS } from './config';
 
 // Project constants (not from env vars)
-console.log(PROJECT_CONSTANTS.name);        // 'SaaS Starter Kit'
-console.log(PROJECT_CONSTANTS.version);     // '1.0.0'
+console.log(PROJECT_CONSTANTS.name); // 'SaaS Starter Kit'
+console.log(PROJECT_CONSTANTS.version); // '1.0.0'
 
 // Environment-based configuration
-console.log(config.env);                    // 'development'
-console.log(config.app.port);               // 3001
-console.log(config.app.url);                // 'http://localhost:3001'
-console.log(config.database.url);           // 'postgresql://...'
-console.log(config.clients.web.url);        // 'http://localhost:3000'
+console.log(config.env); // 'development'
+console.log(config.app.port); // 3001
+console.log(config.app.url); // 'http://localhost:3001'
+console.log(config.database.url); // 'postgresql://...'
+console.log(config.clients.web.url); // 'http://localhost:3000'
 ```
 
 ### Type-Safe Email Provider Access
@@ -50,12 +50,12 @@ import { config } from './config';
 
 // TypeScript enforces type narrowing
 if (config.email.provider.type === 'resend') {
-  // api_key is available and type-safe
-  console.log(config.email.provider.api_key);
+    // api_key is available and type-safe
+    console.log(config.email.provider.api_key);
 }
 
 if (config.email.provider.type === 'console') {
-  // api_key does NOT exist on console provider (TypeScript error if accessed)
+    // api_key does NOT exist on console provider (TypeScript error if accessed)
 }
 ```
 
@@ -65,15 +65,15 @@ if (config.email.provider.type === 'console') {
 import { config } from './config';
 
 if (config.env === 'development') {
-  console.log('Running in development mode');
+    console.log('Running in development mode');
 }
 
 if (config.env === 'production') {
-  console.log('Running in production mode');
+    console.log('Running in production mode');
 }
 
 if (config.env === 'staging') {
-  console.log('Running in staging mode');
+    console.log('Running in staging mode');
 }
 ```
 
@@ -84,23 +84,23 @@ import { setTestConfig, resetTestConfig } from './config/config.test-helpers';
 import { describe, it, beforeEach, afterEach } from 'vitest';
 
 describe('MyFeature', () => {
-  beforeEach(() => {
-    // Override specific config values for testing
-    setTestConfig({
-      email: {
-        provider: { type: 'console' },
-        from: 'test@test.com',
-      },
+    beforeEach(() => {
+        // Override specific config values for testing
+        setTestConfig({
+            email: {
+                provider: { type: 'console' },
+                from: 'test@test.com',
+            },
+        });
     });
-  });
 
-  afterEach(() => {
-    resetTestConfig();
-  });
+    afterEach(() => {
+        resetTestConfig();
+    });
 
-  it('should use test config', () => {
-    // Config is automatically available
-  });
+    it('should use test config', () => {
+        // Config is automatically available
+    });
 });
 ```
 
@@ -113,9 +113,9 @@ Hardcoded values defined in `project.constants.ts` (imported separately, not par
 ```typescript
 import { PROJECT_CONSTANTS } from './config';
 
-PROJECT_CONSTANTS.name         // 'SaaS Starter Kit'
-PROJECT_CONSTANTS.description  // 'A modern SaaS starter kit...'
-PROJECT_CONSTANTS.version      // '1.0.0'
+PROJECT_CONSTANTS.name; // 'SaaS Starter Kit'
+PROJECT_CONSTANTS.description; // 'A modern SaaS starter kit...'
+PROJECT_CONSTANTS.version; // '1.0.0'
 ```
 
 **When to change**: When forking the template to build your own SaaS product.
@@ -128,13 +128,14 @@ Runtime environment information:
 
 ```typescript
 {
-  env: 'development' | 'staging' | 'production';
+    env: 'development' | 'staging' | 'production';
 }
 ```
 
 **Environment Variable**: `NODE_ENV`
 **Default**: `'development'`
 **Environments**:
+
 - `development` - Local development
 - `staging` - Pre-production testing
 - `production` - Live production
@@ -145,14 +146,15 @@ This API server configuration:
 
 ```typescript
 {
-  app: {
-    port: number;    // Default: 3001
-    url: string;     // Default: 'http://localhost:3001'
-  }
+    app: {
+        port: number; // Default: 3001
+        url: string; // Default: 'http://localhost:3001'
+    }
 }
 ```
 
 **Environment Variables**:
+
 - `PORT` - Server port
 - `API_URL` - This API server's URL
 
@@ -162,15 +164,16 @@ Client application URLs (for CORS and trusted origins):
 
 ```typescript
 {
-  clients: {
-    web: {
-      url: string;   // Default: 'http://localhost:3000'
+    clients: {
+        web: {
+            url: string; // Default: 'http://localhost:3000'
+        }
     }
-  }
 }
 ```
 
 **Environment Variables**:
+
 - `FRONTEND_URL` - Next.js web app URL
 
 ### Database
@@ -179,13 +182,14 @@ Database connection configuration:
 
 ```typescript
 {
-  database: {
-    url: string;  // Required
-  }
+    database: {
+        url: string; // Required
+    }
 }
 ```
 
 **Environment Variables**:
+
 - `DATABASE_URL` - **Required** PostgreSQL connection string
 
 ### Authentication
@@ -203,6 +207,7 @@ Better Auth configuration:
 ```
 
 **Environment Variables**:
+
 - `BETTER_AUTH_SECRET` - **Required** (min 32 characters)
 - `BETTER_AUTH_URL` - Auth base URL
 - `FRONTEND_URL` - Auto-added to trusted origins
@@ -223,6 +228,7 @@ Email provider configuration with discriminated union:
 ```
 
 **Environment Variables**:
+
 - `EMAIL_FROM` - Default from address
 - `EMAIL_PROVIDER` - 'console' (default) or 'resend'
 - `RESEND_API_KEY` - **Required when `EMAIL_PROVIDER=resend`**
@@ -235,14 +241,15 @@ OpenAPI/Scalar documentation configuration:
 
 ```typescript
 {
-  openapi: {
-    enabled: boolean;                     // Default: true
-    include_better_auth_routes: boolean;  // Default: true
-  }
+    openapi: {
+        enabled: boolean; // Default: true
+        include_better_auth_routes: boolean; // Default: true
+    }
 }
 ```
 
 **Environment Variables**:
+
 - `OPENAPI_ENABLED` - Enable/disable OpenAPI docs endpoint
 - `OPENAPI_INCLUDE_BETTER_AUTH_ROUTES` - Include Better Auth routes in combined spec
 
@@ -254,13 +261,14 @@ When forking this template, update `project.constants.ts`:
 
 ```typescript
 export const PROJECT_CONSTANTS = {
-  name: 'Your SaaS Name',
-  description: 'Your amazing SaaS description',
-  version: '1.0.0',
+    name: 'Your SaaS Name',
+    description: 'Your amazing SaaS description',
+    version: '1.0.0',
 } as const;
 ```
 
 These constants are used throughout the application:
+
 - API documentation title
 - Email templates
 - Error messages
@@ -270,31 +278,32 @@ These constants are used throughout the application:
 
 ### Required
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/db` |
-| `BETTER_AUTH_SECRET` | Auth secret (min 32 chars) | `your-super-secret-key-min-32-chars` |
+| Variable             | Description                  | Example                                    |
+| -------------------- | ---------------------------- | ------------------------------------------ |
+| `DATABASE_URL`       | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/db` |
+| `BETTER_AUTH_SECRET` | Auth secret (min 32 chars)   | `your-super-secret-key-min-32-chars`       |
 
 ### Optional
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NODE_ENV` | `development` | Environment (`development`, `staging`, `production`) |
-| `PORT` | `3001` | Server port |
-| `API_URL` | `http://localhost:3001` | This API server's URL |
-| `FRONTEND_URL` | `http://localhost:3000` | Next.js web app URL (for CORS) |
-| `BETTER_AUTH_URL` | `http://localhost:3001` | Better Auth base URL |
-| `EMAIL_FROM` | `noreply@localhost.com` | Default email sender |
-| `EMAIL_PROVIDER` | `console` | Email provider (`console`, `resend`) |
-| `RESEND_API_KEY` | - | Resend API key (required if `EMAIL_PROVIDER=resend`) |
-| `OPENAPI_ENABLED` | `true` | Enable OpenAPI docs |
-| `OPENAPI_INCLUDE_BETTER_AUTH_ROUTES` | `true` | Include auth routes in docs |
+| Variable                             | Default                 | Description                                          |
+| ------------------------------------ | ----------------------- | ---------------------------------------------------- |
+| `NODE_ENV`                           | `development`           | Environment (`development`, `staging`, `production`) |
+| `PORT`                               | `3001`                  | Server port                                          |
+| `API_URL`                            | `http://localhost:3001` | This API server's URL                                |
+| `FRONTEND_URL`                       | `http://localhost:3000` | Next.js web app URL (for CORS)                       |
+| `BETTER_AUTH_URL`                    | `http://localhost:3001` | Better Auth base URL                                 |
+| `EMAIL_FROM`                         | `noreply@localhost.com` | Default email sender                                 |
+| `EMAIL_PROVIDER`                     | `console`               | Email provider (`console`, `resend`)                 |
+| `RESEND_API_KEY`                     | -                       | Resend API key (required if `EMAIL_PROVIDER=resend`) |
+| `OPENAPI_ENABLED`                    | `true`                  | Enable OpenAPI docs                                  |
+| `OPENAPI_INCLUDE_BETTER_AUTH_ROUTES` | `true`                  | Include auth routes in docs                          |
 
 ## Design Decisions
 
 ### Why Singleton Pattern?
 
 Config is loaded once on first import because:
+
 1. **Simplicity**: Just `import { config }` - no function calls needed
 2. **Immutability**: Config should be immutable during runtime
 3. **Performance**: Prevents repeated environment variable parsing
@@ -303,6 +312,7 @@ Config is loaded once on first import because:
 ### Why Grouped Structure?
 
 Config properties are grouped into logical sections (`config.app.port`, `config.database.url`, `config.clients.web.url`) because:
+
 1. **Organization**: Related settings grouped together (app, database, auth, clients, email, openapi)
 2. **Clarity**: Clear separation between different concerns
 3. **Extensibility**: Easy to add new fields (like `config.clients.marketing.url`) without cluttering top level
@@ -311,6 +321,7 @@ Config properties are grouped into logical sections (`config.app.port`, `config.
 ### Why Separate Project Constants?
 
 Project constants (name, version, description) are separate from config because:
+
 1. **Not secrets**: Don't need environment variable secrecy
 2. **Not environment-specific**: Same across all environments
 3. **Simpler config**: Config focused only on environment variables
@@ -323,6 +334,7 @@ Tests use `setTestConfig()` to override config, so 'test' doesn't need to be a v
 ### Why Discriminated Unions for Email?
 
 The email provider config uses TypeScript discriminated unions to:
+
 1. Enforce that `api_key` is only present when `type === 'resend'`
 2. Provide compile-time safety when accessing provider-specific config
 3. Enable fail-fast validation when resend is configured incorrectly
@@ -330,6 +342,7 @@ The email provider config uses TypeScript discriminated unions to:
 ### Why Singleton Pattern?
 
 Configuration is loaded once at startup because:
+
 1. Config should be immutable during runtime
 2. Prevents repeated environment variable parsing
 3. Ensures consistency across the application
@@ -338,6 +351,7 @@ Configuration is loaded once at startup because:
 ### Why Fail-Fast?
 
 The system throws errors at startup (not runtime) because:
+
 1. Configuration errors should prevent deployment
 2. Clearer error messages during development
 3. Prevents production issues from misconfiguration
@@ -352,15 +366,16 @@ The configuration system integrates with the Service Registry to determine which
 import { config } from '../config';
 
 export function registerServices(): void {
-  registry.register('email', () => {
-    return new EmailService({
-      providerType: config.email.provider.type,
-      resendApiKey: config.email.provider.type === 'resend'
-        ? config.email.provider.api_key
-        : undefined,
-      defaultFrom: config.email.from,
+    registry.register('email', () => {
+        return new EmailService({
+            providerType: config.email.provider.type,
+            resendApiKey:
+                config.email.provider.type === 'resend'
+                    ? config.email.provider.api_key
+                    : undefined,
+            defaultFrom: config.email.from,
+        });
     });
-  });
 }
 ```
 

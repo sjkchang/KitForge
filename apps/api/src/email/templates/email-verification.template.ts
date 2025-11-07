@@ -1,22 +1,22 @@
 export interface EmailVerificationTemplateParams {
-  userName: string;
-  verificationUrl: string;
+    userName: string;
+    verificationUrl: string;
 }
 
 export interface RenderedEmail {
-  html: string;
-  text: string;
+    html: string;
+    text: string;
 }
 
 /**
  * Render email verification template
  */
 export function renderEmailVerification(
-  params: EmailVerificationTemplateParams
+    params: EmailVerificationTemplateParams,
 ): RenderedEmail {
-  const { userName, verificationUrl } = params;
+    const { userName, verificationUrl } = params;
 
-  const html = `
+    const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,7 +77,7 @@ export function renderEmailVerification(
 </html>
   `.trim();
 
-  const text = `
+    const text = `
 Welcome${userName ? `, ${userName}` : ''}!
 
 Thanks for signing up. To complete your registration, please verify your email address by clicking the link below:
@@ -89,5 +89,5 @@ This link will expire in 24 hours.
 If you didn't create an account, you can safely ignore this email.
   `.trim();
 
-  return { html, text };
+    return { html, text };
 }

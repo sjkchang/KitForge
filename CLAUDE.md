@@ -11,6 +11,7 @@
 ### CRITICAL: You Must Track All Work
 
 **Every session MUST use the TodoWrite tool to track progress.** This is non-negotiable for:
+
 - Complex multi-step tasks (3+ steps)
 - User-provided lists of tasks
 - Any non-trivial implementation work
@@ -20,11 +21,13 @@
 ### Task Management Rules
 
 **Task States:**
+
 - `pending` - Not yet started
 - `in_progress` - Currently working on (ONLY ONE at a time)
 - `completed` - Finished and verified
 
 **Task Lifecycle:**
+
 1. **Create tasks** - Break down work into specific, actionable items
 2. **Mark in_progress** - Before starting work (exactly ONE task at a time)
 3. **Complete immediately** - Mark completed as soon as done (don't batch)
@@ -32,18 +35,20 @@
 
 **Task Format:**
 Each task requires TWO forms:
+
 - `content` - Imperative form: "Run tests", "Fix authentication bug"
 - `activeForm` - Present continuous: "Running tests", "Fixing authentication bug"
 
 **Completion Requirements:**
+
 - ONLY mark completed when FULLY done
 - If blocked or encountering errors, keep as `in_progress`
 - Create new tasks for blockers or new discoveries
 - Never mark as completed if:
-  - Tests are failing
-  - Implementation is partial
-  - Unresolved errors exist
-  - Required files/dependencies missing
+    - Tests are failing
+    - Implementation is partial
+    - Unresolved errors exist
+    - Required files/dependencies missing
 
 ### Example Session Flow
 
@@ -65,6 +70,7 @@ User: "Add dark mode toggle and run tests"
 ### When NOT to Use Todos
 
 Skip the todo list for:
+
 - Single, trivial tasks
 - Pure informational questions
 - Simple explanations
@@ -86,6 +92,7 @@ Skip the todo list for:
 ## What This Project Is
 
 A professional, production-ready SaaS starter kit built as a TypeScript monorepo that can be:
+
 1. Used as a template for building SaaS applications
 2. Sold as a commercial product to developers
 
@@ -94,6 +101,7 @@ A professional, production-ready SaaS starter kit built as a TypeScript monorepo
 ## Working Principles
 
 **DO:**
+
 - Make small, incremental commits
 - Write tests before implementation
 - Update documentation in the same commit
@@ -106,6 +114,7 @@ A professional, production-ready SaaS starter kit built as a TypeScript monorepo
 - **Complete tasks immediately when done**
 
 **DON'T:**
+
 - Make large, sweeping changes
 - Skip tests
 - Leave documentation outdated
@@ -153,11 +162,13 @@ kit/
 ### Core Technologies
 
 **Monorepo:**
+
 - pnpm (package manager)
 - Turborepo (build orchestration)
-- workspace:* protocol (always use local packages)
+- workspace:\* protocol (always use local packages)
 
 **Backend:**
+
 - Hono (HTTP framework)
 - @hono/zod-openapi (OpenAPI generation)
 - PostgreSQL (database)
@@ -166,17 +177,20 @@ kit/
 - CASL (authorization)
 
 **Frontend:**
+
 - Next.js 14+ (App Router, React Server Components)
 - Astro (marketing site)
 - openapi-fetch (type-safe API client)
 
 **Testing:**
+
 - Vitest (unit + integration)
 - Playwright (E2E)
 - Testcontainers (integration tests with real Postgres)
 - In-memory repositories (unit tests)
 
 **Tooling:**
+
 - TypeScript (strict mode)
 - ESLint + Prettier
 - Husky (pre-commit hooks)
@@ -193,6 +207,7 @@ We use a **Service Registry** pattern for managing application services. This pr
 **Location:** `apps/api/src/services/`
 
 **File Structure:**
+
 ```
 services/
 ├── registry.ts           # Generic ServiceRegistry class
@@ -201,6 +216,7 @@ services/
 ```
 
 **Usage:**
+
 ```typescript
 // Import and use services directly
 import { services } from './services/service-registry';
@@ -220,27 +236,29 @@ await email.sendPasswordReset({ ... });
 **How it works:**
 
 1. **Define service interface** (`services/types.ts`):
+
 ```typescript
 import type { EmailService } from '../email/email.service';
 
 export interface Services {
-  email: EmailService;
-  // Future services:
-  // sms: SmsService;
-  // storage: StorageService;
+    email: EmailService;
+    // Future services:
+    // sms: SmsService;
+    // storage: StorageService;
 }
 ```
 
 2. **Register services** (`services/service-registry.ts`):
+
 ```typescript
 export function registerServices(): void {
-  registry.register('email', () => {
-    return new EmailService({
-      providerType: process.env.EMAIL_PROVIDER || 'console',
-      resendApiKey: process.env.RESEND_API_KEY,
-      defaultFrom: process.env.EMAIL_FROM || 'noreply@localhost.com',
+    registry.register('email', () => {
+        return new EmailService({
+            providerType: process.env.EMAIL_PROVIDER || 'console',
+            resendApiKey: process.env.RESEND_API_KEY,
+            defaultFrom: process.env.EMAIL_FROM || 'noreply@localhost.com',
+        });
     });
-  });
 }
 
 // Export services with auto-registration
@@ -250,22 +268,24 @@ export const services = servicesProxy;
 3. **Auto-registration:** Services register automatically on first access via Proxy
 
 **Testing:**
+
 ```typescript
 import { configureServices, resetServices } from './services/service-registry';
 
 beforeEach(() => {
-  // Override services for testing
-  configureServices({
-    email: mockEmailService,
-  });
+    // Override services for testing
+    configureServices({
+        email: mockEmailService,
+    });
 });
 
 afterEach(() => {
-  resetServices(); // Clear instances
+    resetServices(); // Clear instances
 });
 ```
 
 **Key Benefits:**
+
 - **Ergonomic API:** Import once, use anywhere with `services.email`
 - **Lazy initialization:** Services created only when first accessed
 - **Type-safe:** Full TypeScript autocomplete and type checking
@@ -287,6 +307,7 @@ We use a custom configuration system that combines hardcoded project constants w
 **Location:** `apps/api/src/config/`
 
 **File Structure:**
+
 ```
 config/
 ├── index.ts                 # Config singleton, loading, and exports
@@ -297,27 +318,28 @@ config/
 ```
 
 **Usage:**
+
 ```typescript
 // Import configuration
 import { config, PROJECT_CONSTANTS } from './config';
 
 // Access project constants (hardcoded, separate from config)
-console.log(PROJECT_CONSTANTS.name);        // 'SaaS Starter Kit'
-console.log(PROJECT_CONSTANTS.version);     // '1.0.0'
+console.log(PROJECT_CONSTANTS.name); // 'SaaS Starter Kit'
+console.log(PROJECT_CONSTANTS.version); // '1.0.0'
 
 // Access server config (from env vars with defaults)
-console.log(config.app.port);               // 3001
-console.log(config.app.url);                // 'http://localhost:3001'
+console.log(config.app.port); // 3001
+console.log(config.app.url); // 'http://localhost:3001'
 
 // Type-safe provider config with discriminated unions
 if (config.email.provider.type === 'resend') {
-  // TypeScript knows api_key exists here
-  console.log(config.email.provider.api_key);
+    // TypeScript knows api_key exists here
+    console.log(config.email.provider.api_key);
 }
 
 // Environment checks
 if (config.env === 'development') {
-  console.log('Running in dev mode');
+    console.log('Running in dev mode');
 }
 ```
 
@@ -330,6 +352,7 @@ if (config.env === 'development') {
 5. **Separate Constants**: Project constants separate from environment config
 
 **Configuration Sections:**
+
 ```typescript
 {
   env: 'development' | 'staging' | 'production',
@@ -370,70 +393,77 @@ if (config.env === 'development') {
 ```
 
 **Project Constants** (imported separately):
+
 ```typescript
 import { PROJECT_CONSTANTS } from './config';
 
-PROJECT_CONSTANTS.name         // 'SaaS Starter Kit'
-PROJECT_CONSTANTS.description  // 'A modern SaaS starter kit...'
-PROJECT_CONSTANTS.version      // '1.0.0'
+PROJECT_CONSTANTS.name; // 'SaaS Starter Kit'
+PROJECT_CONSTANTS.description; // 'A modern SaaS starter kit...'
+PROJECT_CONSTANTS.version; // '1.0.0'
 ```
 
 **Integration with Service Registry:**
+
 ```typescript
 // services/service-registry.ts
 import { config } from '../config';
 
 export function registerServices(): void {
-  // Services use config instead of process.env
-  registry.register('email', () => {
-    return new EmailService({
-      providerType: config.email.provider.type,
-      resendApiKey: config.email.provider.type === 'resend'
-        ? config.email.provider.api_key
-        : undefined,
-      defaultFrom: config.email.from,
+    // Services use config instead of process.env
+    registry.register('email', () => {
+        return new EmailService({
+            providerType: config.email.provider.type,
+            resendApiKey:
+                config.email.provider.type === 'resend'
+                    ? config.email.provider.api_key
+                    : undefined,
+            defaultFrom: config.email.from,
+        });
     });
-  });
 }
 ```
 
 **Testing:**
+
 ```typescript
 import { setTestConfig, resetTestConfig } from './config/config.test-helpers';
 
 beforeEach(() => {
-  // Override specific config values for testing
-  setTestConfig({
-    email: {
-      provider: { type: 'console' },
-      from: 'test@test.com',
-    },
-  });
+    // Override specific config values for testing
+    setTestConfig({
+        email: {
+            provider: { type: 'console' },
+            from: 'test@test.com',
+        },
+    });
 });
 
 afterEach(() => {
-  resetTestConfig();
+    resetTestConfig();
 });
 ```
 
 **Customizing for Your SaaS:**
 
 When forking the template, edit `apps/api/src/config/project.constants.ts`:
+
 ```typescript
 export const PROJECT_CONSTANTS = {
-  name: 'Your SaaS Name',
-  description: 'Your amazing SaaS description',
-  version: '1.0.0',
+    name: 'Your SaaS Name',
+    description: 'Your amazing SaaS description',
+    version: '1.0.0',
 } as const;
 ```
 
 **Environment Variables:**
 
 Required:
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `BETTER_AUTH_SECRET` - Auth secret (min 32 chars)
 
 Optional (with defaults):
+
 - `NODE_ENV` - Environment (default: development)
 - `PORT` - Server port (default: 3001)
 - `API_URL` - This API server's URL (default: http://localhost:3001)
@@ -446,6 +476,7 @@ Optional (with defaults):
 - `OPENAPI_INCLUDE_BETTER_AUTH_ROUTES` - Include auth routes (default: true)
 
 **Key Benefits:**
+
 - **No process.env in business logic**: All env access centralized
 - **Fail-fast**: Catches config errors at startup
 - **Type-safe**: Full TypeScript inference
@@ -455,42 +486,45 @@ Optional (with defaults):
 ### 3. Entity + Repository Pattern
 
 **Entities (Source of Truth):**
+
 ```typescript
 // apps/api/src/entities/user.entity.ts
 import { z } from 'zod';
 
 export const UserEntity = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  name: z.string().nullable(),
-  role: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+    id: z.string().uuid(),
+    email: z.string().email(),
+    name: z.string().nullable(),
+    role: z.string(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
 });
 
 export type User = z.infer<typeof UserEntity>;
 ```
 
 **Repositories (MUST validate against entities):**
+
 ```typescript
 // apps/api/src/repositories/user.repository.ts
 export class DrizzleUserRepository {
-  constructor(private db: Database) {}
+    constructor(private db: Database) {}
 
-  async findById(id: string): Promise<User | null> {
-    const result = await this.db.query.users.findFirst({
-      where: eq(users.id, id),
-    });
+    async findById(id: string): Promise<User | null> {
+        const result = await this.db.query.users.findFirst({
+            where: eq(users.id, id),
+        });
 
-    if (!result) return null;
+        if (!result) return null;
 
-    // CRITICAL: Always validate DB results
-    return UserEntity.parse(result);
-  }
+        // CRITICAL: Always validate DB results
+        return UserEntity.parse(result);
+    }
 }
 ```
 
 **Why this matters:**
+
 - Entities are NOT tied to ORM types
 - Runtime validation ensures type safety
 - Easy to swap query implementations
@@ -513,43 +547,44 @@ export class DrizzleUserRepository {
 ```
 
 **Example:**
+
 ```typescript
 // 1. Backend validation schema
 // apps/api/src/schemas/user.ts
 export const CreateUserInput = z.object({
-  email: z.string().email(),
-  name: z.string(),
+    email: z.string().email(),
+    name: z.string(),
 });
 
 // 2. API route
 // apps/api/src/routes/users.ts
 const createUserRoute = createRoute({
-  method: 'post',
-  path: '/users',
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: CreateUserInput.openapi('CreateUserInput'),
+    method: 'post',
+    path: '/users',
+    request: {
+        body: {
+            content: {
+                'application/json': {
+                    schema: CreateUserInput.openapi('CreateUserInput'),
+                },
+            },
         },
-      },
     },
-  },
-  responses: {
-    201: {
-      content: {
-        'application/json': {
-          schema: UserEntity.openapi('User'),
+    responses: {
+        201: {
+            content: {
+                'application/json': {
+                    schema: UserEntity.openapi('User'),
+                },
+            },
         },
-      },
     },
-  },
 });
 
 // 3. Frontend usage (fully typed!)
 // apps/web/components/CreateUser.tsx
 const { data, error } = await api.POST('/users', {
-  body: { email: 'test@example.com', name: 'Test' }
+    body: { email: 'test@example.com', name: 'Test' },
 });
 // data is typed as User | undefined
 ```
@@ -557,39 +592,42 @@ const { data, error } = await api.POST('/users', {
 ### 4. Authorization Pattern (CASL)
 
 **Define abilities:**
+
 ```typescript
 // packages/authorization/src/abilities.ts
 export function defineAbilitiesFor(user: User) {
-  return defineAbility((can, cannot) => {
-    if (user.role === 'admin') {
-      can('manage', 'all');
-    } else {
-      can('read', 'Post', { published: true });
-      can(['update', 'delete'], 'Post', { authorId: user.id });
-    }
-  });
+    return defineAbility((can, cannot) => {
+        if (user.role === 'admin') {
+            can('manage', 'all');
+        } else {
+            can('read', 'Post', { published: true });
+            can(['update', 'delete'], 'Post', { authorId: user.id });
+        }
+    });
 }
 ```
 
 **Enforce on backend:**
+
 ```typescript
 // apps/api/src/routes/posts.ts
 app.delete('/posts/:id', async (c) => {
-  const user = c.get('user');
-  const ability = defineAbilitiesFor(user);
+    const user = c.get('user');
+    const ability = defineAbilitiesFor(user);
 
-  const post = await postRepo.findById(c.req.param('id'));
+    const post = await postRepo.findById(c.req.param('id'));
 
-  if (!ability.can('delete', subject('Post', post))) {
-    return c.json({ error: 'Forbidden' }, 403);
-  }
+    if (!ability.can('delete', subject('Post', post))) {
+        return c.json({ error: 'Forbidden' }, 403);
+    }
 
-  await postRepo.delete(post.id);
-  return c.json({ success: true });
+    await postRepo.delete(post.id);
+    return c.json({ success: true });
 });
 ```
 
 **Optimistic checks on frontend:**
+
 ```typescript
 // apps/web/components/PostActions.tsx
 const ability = defineAbilitiesFor(user);
@@ -613,27 +651,30 @@ return (
 Use TodoWrite to break down the feature into actionable steps.
 
 **2. Create feature branch:**
+
 ```bash
 git checkout -b feature/user-authentication
 ```
 
 **3. Write test first (TDD):**
+
 ```typescript
 // apps/api/src/repositories/user.repository.test.ts
 describe('UserRepository', () => {
-  it('should create user with hashed password', async () => {
-    const user = await userRepo.create({
-      email: 'test@example.com',
-      password: 'plaintext',
-    });
+    it('should create user with hashed password', async () => {
+        const user = await userRepo.create({
+            email: 'test@example.com',
+            password: 'plaintext',
+        });
 
-    expect(user.id).toBeDefined();
-    expect(user.password).not.toBe('plaintext'); // Should be hashed
-  });
+        expect(user.id).toBeDefined();
+        expect(user.password).not.toBe('plaintext'); // Should be hashed
+    });
 });
 ```
 
 **4. Implement to pass test:**
+
 ```typescript
 // apps/api/src/repositories/user.repository.ts
 async create(data: CreateUserData): Promise<User> {
@@ -652,6 +693,7 @@ async create(data: CreateUserData): Promise<User> {
 ```
 
 **5. Commit (granular, focused):**
+
 ```bash
 git add apps/api/src/repositories/user.repository.ts
 git add apps/api/src/repositories/user.repository.test.ts
@@ -661,6 +703,7 @@ git commit -m "feat(api): add password hashing to user creation"
 **6. Update todo as completed and move to next task**
 
 **7. Continue with next small piece:**
+
 ```bash
 # Next commit: Add login endpoint
 # Next commit: Add session management
@@ -670,11 +713,13 @@ git commit -m "feat(api): add password hashing to user creation"
 ### Adding a New Package
 
 **Only add packages that are:**
+
 1. Shared between multiple apps
 2. Approved in REQUIREMENTS.md
 3. Have clear, singular purpose
 
 **Process:**
+
 ```bash
 # 1. Create package structure
 mkdir -p packages/@kit/new-package/src
@@ -707,6 +752,7 @@ EOF
 ### Database Migrations
 
 **Workflow:**
+
 ```bash
 # 1. Update Drizzle schema
 # Edit: packages/database/src/schema/users.ts
@@ -733,60 +779,65 @@ git commit -m "feat(database): add email_verified column to users"
 ### Adding API Endpoints
 
 **1. Define validation schema:**
+
 ```typescript
 // packages/validation/src/user.ts
 export const UpdateUserInput = z.object({
-  name: z.string().min(2).optional(),
-  bio: z.string().max(500).optional(),
+    name: z.string().min(2).optional(),
+    bio: z.string().max(500).optional(),
 });
 ```
 
 **2. Define route:**
+
 ```typescript
 // apps/api/src/routes/users.ts
 const updateUserRoute = createRoute({
-  method: 'patch',
-  path: '/users/{id}',
-  request: {
-    params: z.object({ id: z.string().uuid() }),
-    body: {
-      content: {
-        'application/json': {
-          schema: UpdateUserInput.openapi('UpdateUserInput'),
+    method: 'patch',
+    path: '/users/{id}',
+    request: {
+        params: z.object({ id: z.string().uuid() }),
+        body: {
+            content: {
+                'application/json': {
+                    schema: UpdateUserInput.openapi('UpdateUserInput'),
+                },
+            },
         },
-      },
     },
-  },
-  responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: UserEntity.openapi('User'),
+    responses: {
+        200: {
+            content: {
+                'application/json': {
+                    schema: UserEntity.openapi('User'),
+                },
+            },
         },
-      },
     },
-  },
 });
 ```
 
 **3. Implement handler:**
+
 ```typescript
 app.openapi(updateUserRoute, async (c) => {
-  const { id } = c.req.valid('param');
-  const data = c.req.valid('json');
+    const { id } = c.req.valid('param');
+    const data = c.req.valid('json');
 
-  const user = await userRepository.update(id, data);
+    const user = await userRepository.update(id, data);
 
-  return c.json(user);
+    return c.json(user);
 });
 ```
 
 **4. Regenerate client:**
+
 ```bash
 pnpm generate:client
 ```
 
 **5. Commit:**
+
 ```bash
 git add packages/validation/src/user.ts
 git add apps/api/src/routes/users.ts
@@ -801,6 +852,7 @@ git commit -m "feat(api): add PATCH /users/:id endpoint"
 ### Test Types
 
 **Unit Tests (In-Memory):**
+
 ```typescript
 // Use in-memory repositories
 const userRepo = new InMemoryUserRepository();
@@ -810,11 +862,12 @@ const service = new UserService(userRepo);
 ```
 
 **Integration Tests (Testcontainers):**
+
 ```typescript
 // Real Postgres in Docker
 const container = await new GenericContainer('postgres:16')
-  .withEnvironment({ POSTGRES_PASSWORD: 'test' })
-  .start();
+    .withEnvironment({ POSTGRES_PASSWORD: 'test' })
+    .start();
 
 const db = await createDatabase(connectionString);
 const userRepo = new DrizzleUserRepository(db);
@@ -823,18 +876,20 @@ const userRepo = new DrizzleUserRepository(db);
 ```
 
 **E2E Tests (Playwright):**
+
 ```typescript
 // Full user flow
 test('user can sign up and log in', async ({ page }) => {
-  await page.goto('/signup');
-  await page.fill('[name=email]', 'test@example.com');
-  // ...
+    await page.goto('/signup');
+    await page.fill('[name=email]', 'test@example.com');
+    // ...
 });
 ```
 
 ### Test File Organization
 
 **Co-locate tests:**
+
 ```
 src/
 ├── repositories/
@@ -846,6 +901,7 @@ src/
 ```
 
 **E2E tests separate:**
+
 ```
 tests/
 └── e2e/
@@ -902,20 +958,20 @@ pnpm generate:client
 ```typescript
 // Middleware
 app.use('/api/*', async (c, next) => {
-  const session = await getSession(c);
+    const session = await getSession(c);
 
-  if (!session) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
+    if (!session) {
+        return c.json({ error: 'Unauthorized' }, 401);
+    }
 
-  c.set('user', session.user);
-  await next();
+    c.set('user', session.user);
+    await next();
 });
 
 // Protected route
 app.get('/api/me', async (c) => {
-  const user = c.get('user'); // Guaranteed to exist
-  return c.json(user);
+    const user = c.get('user'); // Guaranteed to exist
+    return c.json(user);
 });
 ```
 
@@ -924,30 +980,30 @@ app.get('/api/me', async (c) => {
 ```typescript
 // Define error types
 export class NotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'NotFoundError';
-  }
+    constructor(message: string) {
+        super(message);
+        this.name = 'NotFoundError';
+    }
 }
 
 // Throw in service/repository
 if (!user) {
-  throw new NotFoundError('User not found');
+    throw new NotFoundError('User not found');
 }
 
 // Handle in error middleware
 app.onError((err, c) => {
-  if (err instanceof NotFoundError) {
-    return c.json({ error: err.message }, 404);
-  }
+    if (err instanceof NotFoundError) {
+        return c.json({ error: err.message }, 404);
+    }
 
-  if (err instanceof z.ZodError) {
-    return c.json({ error: 'Validation failed', details: err.errors }, 400);
-  }
+    if (err instanceof z.ZodError) {
+        return c.json({ error: 'Validation failed', details: err.errors }, 400);
+    }
 
-  // Log unexpected errors
-  console.error(err);
-  return c.json({ error: 'Internal server error' }, 500);
+    // Log unexpected errors
+    console.error(err);
+    return c.json({ error: 'Internal server error' }, 500);
 });
 ```
 
@@ -1014,31 +1070,34 @@ BREAKING CHANGE: User API now returns createdAt as ISO string instead of timesta
 ### TypeScript
 
 **Use strict mode:**
+
 ```json
 // tsconfig.json
 {
-  "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
-  }
+    "compilerOptions": {
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitOverride": true
+    }
 }
 ```
 
 **Prefer explicit types for public APIs:**
+
 ```typescript
 // Good
 export function createUser(data: CreateUserInput): Promise<User> {
-  // ...
+    // ...
 }
 
 // Avoid
 export function createUser(data) {
-  // ...
+    // ...
 }
 ```
 
 **Use Zod for runtime validation:**
+
 ```typescript
 // Always validate external data
 const input = CreateUserInput.parse(req.body);
@@ -1047,6 +1106,7 @@ const input = CreateUserInput.parse(req.body);
 ### Naming Conventions
 
 **Files:**
+
 - `kebab-case.ts` for files
 - `.test.ts` suffix for tests
 - `.entity.ts` for entities
@@ -1054,11 +1114,13 @@ const input = CreateUserInput.parse(req.body);
 - `.service.ts` for services
 
 **Variables/Functions:**
+
 - `camelCase` for variables and functions
 - `PascalCase` for classes and types
 - `UPPER_SNAKE_CASE` for constants
 
 **Interfaces/Types:**
+
 ```typescript
 // Good
 type User = { ... };
@@ -1071,6 +1133,7 @@ interface IUserRepository { ... } // Don't do this
 ### Imports
 
 **Order:**
+
 ```typescript
 // 1. External dependencies
 import { z } from 'zod';
@@ -1087,6 +1150,7 @@ import type { User } from '../entities/user.entity';
 ```
 
 **Use type imports when possible:**
+
 ```typescript
 import type { User } from '../entities/user.entity';
 ```
@@ -1098,6 +1162,7 @@ import type { User } from '../entities/user.entity';
 ### Common Issues
 
 **Issue: Workspace package not found**
+
 ```bash
 # Solution: Rebuild packages
 pnpm build
@@ -1107,12 +1172,14 @@ pnpm --filter @kit/database build
 ```
 
 **Issue: Types not updating after OpenAPI change**
+
 ```bash
 # Solution: Regenerate client
 pnpm generate:client
 ```
 
 **Issue: Migration fails**
+
 ```bash
 # Check current migration status
 pnpm db:studio
@@ -1125,6 +1192,7 @@ pnpm db:migrate
 ```
 
 **Issue: Tests fail with DB errors**
+
 ```bash
 # Ensure Testcontainers is working
 docker ps
@@ -1139,6 +1207,7 @@ docker info
 ### Logging
 
 **Development:**
+
 ```typescript
 // Use console.log/error for now
 console.log('User created:', user);
@@ -1146,6 +1215,7 @@ console.error('Failed to create user:', error);
 ```
 
 **Production (future):**
+
 ```typescript
 // TODO: Replace with structured logging
 import { logger } from '@kit/logger';
@@ -1160,21 +1230,25 @@ logger.error('Failed to create user', { error });
 ### When to Update Docs
 
 **REQUIREMENTS.md:**
+
 - Adding/removing features
 - Changing tech stack
 - Updating roadmap
 
 **ARCHITECTURE.md:**
+
 - Changing architectural patterns
 - Adding new layers/packages
 - Modifying data flow
 
 **ADRs (docs/decisions/):**
+
 - Making significant technical decisions
 - Choosing between alternatives
 - Documenting "why" behind choices
 
 **README.md:**
+
 - Changing setup process
 - Adding/removing scripts
 - Updating quick start
@@ -1182,11 +1256,13 @@ logger.error('Failed to create user', { error });
 ### Creating ADRs
 
 **When to create:**
+
 - Choosing technologies (Hono vs Express)
 - Architectural patterns (Repository pattern)
 - Major refactors (changing auth system)
 
 **Template:**
+
 ```markdown
 # ADR XXX: Title
 
@@ -1194,18 +1270,23 @@ logger.error('Failed to create user', { error });
 **Date:** YYYY-MM-DD
 
 ## Context
+
 What problem are we solving?
 
 ## Decision
+
 What did we decide?
 
 ## Rationale
+
 Why this over alternatives?
 
 ## Consequences
+
 Positive, negative, neutral outcomes
 
 ## Alternatives Considered
+
 What else did we consider and why not?
 ```
 
@@ -1215,13 +1296,14 @@ What else did we consider and why not?
 
 ### Workspace Protocol
 
-**Always use workspace:* for internal packages:**
+**Always use workspace:\* for internal packages:**
+
 ```json
 {
-  "dependencies": {
-    "@kit/database": "workspace:*",
-    "@kit/api-client": "workspace:*"
-  }
+    "dependencies": {
+        "@kit/database": "workspace:*",
+        "@kit/api-client": "workspace:*"
+    }
 }
 ```
 
@@ -1230,12 +1312,14 @@ What else did we consider and why not?
 ### External Dependencies
 
 **Check before adding:**
+
 1. Is it necessary?
 2. Is it maintained?
 3. Is it well-documented?
 4. Does it align with our stack?
 
 **Add dependency:**
+
 ```bash
 # Add to specific package
 pnpm --filter @kit/database add drizzle-orm
@@ -1254,36 +1338,36 @@ pnpm --filter @kit/api add hono
 When starting a new Claude session, ensure you:
 
 1. **Read context:**
-   - This file (CLAUDE.md) ✓
-   - REQUIREMENTS.md
-   - ARCHITECTURE.md (if exists)
-   - Recent git commits
+    - This file (CLAUDE.md) ✓
+    - REQUIREMENTS.md
+    - ARCHITECTURE.md (if exists)
+    - Recent git commits
 
 2. **Check project state:**
-   - What's implemented?
-   - What tests exist?
-   - Current git status?
+    - What's implemented?
+    - What tests exist?
+    - Current git status?
 
 3. **Understand the goal:**
-   - What feature/fix are we building?
-   - What's the acceptance criteria?
-   - Are there tests to guide implementation?
+    - What feature/fix are we building?
+    - What's the acceptance criteria?
+    - Are there tests to guide implementation?
 
 4. **Create todo list:**
-   - Break down work into small, trackable tasks
-   - Define both content and activeForm for each
-   - Mark first task as in_progress when starting
+    - Break down work into small, trackable tasks
+    - Define both content and activeForm for each
+    - Mark first task as in_progress when starting
 
 5. **Plan approach:**
-   - Small, granular commits
-   - Tests first (TDD)
-   - Update docs in same commit
-   - Keep todos updated throughout
+    - Small, granular commits
+    - Tests first (TDD)
+    - Update docs in same commit
+    - Keep todos updated throughout
 
 6. **Ask questions:**
-   - Unclear requirements?
-   - Ambiguous patterns?
-   - Need user input?
+    - Unclear requirements?
+    - Ambiguous patterns?
+    - Need user input?
 
 ---
 

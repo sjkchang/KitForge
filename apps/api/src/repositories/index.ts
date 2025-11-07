@@ -6,20 +6,20 @@ import { config } from '../config';
 let db: Database | null = null;
 
 function getDatabase(): Database {
-  if (!db) {
-    db = createDatabase(config.database.url);
-  }
-  return db;
+    if (!db) {
+        db = createDatabase(config.database.url);
+    }
+    return db;
 }
 
 // Lazy-loaded repository singletons
 let userRepository: UserRepository | null = null;
 
 export function getUserRepository(): UserRepository {
-  if (!userRepository) {
-    userRepository = new UserRepository(getDatabase());
-  }
-  return userRepository;
+    if (!userRepository) {
+        userRepository = new UserRepository(getDatabase());
+    }
+    return userRepository;
 }
 
 // Add more repository getters as needed:

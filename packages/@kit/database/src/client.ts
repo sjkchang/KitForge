@@ -8,8 +8,8 @@ import * as schema from './schema';
  * @returns Drizzle database client
  */
 export function createDatabase(connectionString: string) {
-  const client = postgres(connectionString);
-  return drizzle(client, { schema });
+    const client = postgres(connectionString);
+    return drizzle(client, { schema });
 }
 
 /**

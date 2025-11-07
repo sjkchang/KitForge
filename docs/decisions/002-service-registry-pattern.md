@@ -41,29 +41,32 @@ apps/api/src/services/
 ### Key Design Decisions
 
 1. **Proxy-based property access:** Export a `services` object that auto-registers on first access
-   ```typescript
-   services.email.sendEmailVerification(...) // Clean syntax
-   ```
+
+    ```typescript
+    services.email.sendEmailVerification(...) // Clean syntax
+    ```
 
 2. **Type-safe interface:** Define all services in a `Services` interface for autocomplete
-   ```typescript
-   interface Services {
-     email: EmailService;
-   }
-   ```
+
+    ```typescript
+    interface Services {
+        email: EmailService;
+    }
+    ```
 
 3. **Lazy initialization:** Services registered as factories, instantiated on first access
-   ```typescript
-   registry.register('email', () => new EmailService(...));
-   ```
+
+    ```typescript
+    registry.register('email', () => new EmailService(...));
+    ```
 
 4. **Auto-registration:** Services register automatically via Proxy on first property access
-   - No need to call `registerServices()` manually in production code
-   - Can still call explicitly for control in tests
+    - No need to call `registerServices()` manually in production code
+    - Can still call explicitly for control in tests
 
 5. **Simplified service implementation:** Merged email provider factory into EmailService constructor
-   - Reduced indirection
-   - Service takes config, creates provider internally
+    - Reduced indirection
+    - Service takes config, creates provider internally
 
 ### Implementation
 
@@ -72,21 +75,21 @@ apps/api/src/services/
 const registry = new ServiceRegistry<Services>();
 
 export function registerServices(): void {
-  registry.register('email', () => {
-    return new EmailService({
-      providerType: process.env.EMAIL_PROVIDER || 'console',
-      resendApiKey: process.env.RESEND_API_KEY,
-      defaultFrom: process.env.EMAIL_FROM || 'noreply@localhost.com',
+    registry.register('email', () => {
+        return new EmailService({
+            providerType: process.env.EMAIL_PROVIDER || 'console',
+            resendApiKey: process.env.RESEND_API_KEY,
+            defaultFrom: process.env.EMAIL_FROM || 'noreply@localhost.com',
+        });
     });
-  });
 }
 
 // Auto-registering proxy
 const servicesProxy = new Proxy(registry, {
-  get(target, prop) {
-    if (!registered) registerServices();
-    return target.get(prop as keyof Services);
-  },
+    get(target, prop) {
+        if (!registered) registerServices();
+        return target.get(prop as keyof Services);
+    },
 });
 
 export const services = servicesProxy as Services;
@@ -114,23 +117,23 @@ beforeEach(() => {
 **Considered alternatives:**
 
 1. **Context-based injection:** Pass context object everywhere
-   - ❌ Requires threading context through all functions
-   - ❌ Verbose, clutters function signatures
+    - ❌ Requires threading context through all functions
+    - ❌ Verbose, clutters function signatures
 
 2. **Simple module-level singleton:** (Original implementation)
-   - ❌ Hard to test (need reset functions)
-   - ❌ Hidden global state
-   - ❌ Not composable
+    - ❌ Hard to test (need reset functions)
+    - ❌ Hidden global state
+    - ❌ Not composable
 
 3. **Full DI framework:** (e.g., InversifyJS, tsyringe)
-   - ❌ Over-engineering for our needs
-   - ❌ Additional complexity and learning curve
-   - ❌ Decorators and reflection add build complexity
+    - ❌ Over-engineering for our needs
+    - ❌ Additional complexity and learning curve
+    - ❌ Decorators and reflection add build complexity
 
 4. **Functional approach:** Export factory functions directly
-   - ✅ Simple and clean
-   - ❌ Less organized as service count grows
-   - ❌ Harder to override for testing
+    - ✅ Simple and clean
+    - ❌ Less organized as service count grows
+    - ❌ Harder to override for testing
 
 ### Why This Pattern Wins
 
@@ -162,27 +165,28 @@ beforeEach(() => {
 ### Negative
 
 - ⚠️ **Proxy magic:** Some developers may find Proxy less obvious than explicit calls
-  - Mitigated by: Clear documentation and examples
+    - Mitigated by: Clear documentation and examples
 - ⚠️ **Global state:** Still uses module-level singleton
-  - Mitigated by: Explicit `resetServices()` for testing, clear lifecycle
+    - Mitigated by: Explicit `resetServices()` for testing, clear lifecycle
 - ⚠️ **Runtime errors:** Missing services throw at runtime, not compile-time
-  - Mitigated by: TypeScript prevents access to undefined services
+    - Mitigated by: TypeScript prevents access to undefined services
 
 ### Neutral
 
 - 📝 **Learning curve:** New pattern to learn (but simpler than DI frameworks)
 - 📝 **Migration effort:** Need to update existing services to follow this pattern
-  - Completed for email service as reference implementation
+    - Completed for email service as reference implementation
 
 ## Alternatives Considered
 
 ### 1. Service Locator with String Keys
 
 ```typescript
-registry.get<EmailService>('email')
+registry.get<EmailService>('email');
 ```
 
 **Rejected because:**
+
 - Less type-safe (manual type annotations)
 - More verbose than property access
 - No autocomplete for service names
@@ -194,6 +198,7 @@ export const email = createEmailService();
 ```
 
 **Rejected because:**
+
 - Harder to override for testing
 - No central registry to inspect
 - Services instantiate at module load time (not lazy)
@@ -208,6 +213,7 @@ export function createApp() {
 ```
 
 **Rejected because:**
+
 - Better Auth initializes at module level, can't receive injected services
 - Would require major refactoring of Better Auth integration
 - Less ergonomic for general service access

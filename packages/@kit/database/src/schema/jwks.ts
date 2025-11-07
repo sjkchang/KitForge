@@ -6,8 +6,8 @@ import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
  * Reference: https://www.better-auth.com/docs/plugins/jwt
  */
 export const jwks = pgTable('jwks', {
-  id: text('id').primaryKey(),
-  publicKey: text('publicKey').notNull(),
-  privateKey: text('privateKey').notNull(),
-  createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
+    id: text('id').primaryKey(),
+    publicKey: text('publicKey').notNull(),
+    privateKey: text('privateKey').notNull(),
+    createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
 });

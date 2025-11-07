@@ -7,6 +7,7 @@ Type-safe API client for the SaaS Starter Kit, automatically generated from Open
 This package provides a fully type-safe HTTP client that knows about all your API endpoints, request bodies, and response types. It's built on top of [`openapi-fetch`](https://github.com/drwpow/openapi-typescript/tree/main/packages/openapi-fetch) and uses TypeScript types generated from your OpenAPI schema.
 
 **Key Benefits:**
+
 - ✅ **100% Type-Safe** - TypeScript knows every endpoint, parameter, and response shape
 - ✅ **Autocomplete** - Your IDE suggests available endpoints and fields
 - ✅ **Always in Sync** - Regenerate types when your API changes
@@ -35,10 +36,10 @@ const api = createApiClient();
 const { data, error } = await api.GET('/health');
 
 if (error) {
-  console.error('API is down:', error);
+    console.error('API is down:', error);
 } else {
-  console.log('API status:', data.status); // TypeScript knows this is "ok"
-  console.log('Timestamp:', data.timestamp); // TypeScript knows this is a string
+    console.log('API status:', data.status); // TypeScript knows this is "ok"
+    console.log('Timestamp:', data.timestamp); // TypeScript knows this is a string
 }
 ```
 
@@ -53,32 +54,32 @@ import { createApiClient } from '@kit/api-client';
 import { useSession } from '@/lib/auth-client';
 
 export function MyComponent() {
-  const { data: session } = useSession();
+    const { data: session } = useSession();
 
-  const fetchData = async () => {
-    if (!session) return;
+    const fetchData = async () => {
+        if (!session) return;
 
-    // Create authenticated client
-    const api = createApiClient({
-      token: session.session.token,
-    });
+        // Create authenticated client
+        const api = createApiClient({
+            token: session.session.token,
+        });
 
-    // Make authenticated request
-    const { data, error } = await api.GET('/api/me');
+        // Make authenticated request
+        const { data, error } = await api.GET('/api/me');
 
-    if (error) {
-      console.error('Error:', error.error); // Typed error message
-      return;
-    }
+        if (error) {
+            console.error('Error:', error.error); // Typed error message
+            return;
+        }
 
-    // TypeScript knows all these fields exist and their types
-    console.log('User ID:', data.user.id); // string
-    console.log('Email:', data.user.email); // string
-    console.log('Verified:', data.user.emailVerified); // boolean
-    console.log('Role:', data.user.role); // string
-  };
+        // TypeScript knows all these fields exist and their types
+        console.log('User ID:', data.user.id); // string
+        console.log('Email:', data.user.email); // string
+        console.log('Verified:', data.user.emailVerified); // boolean
+        console.log('Role:', data.user.role); // string
+    };
 
-  // ...
+    // ...
 }
 ```
 
@@ -118,22 +119,22 @@ Creates a type-safe API client instance.
 
 ```typescript
 interface ApiClientOptions {
-  /**
-   * Base URL for the API
-   * @default process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-   */
-  baseUrl?: string;
+    /**
+     * Base URL for the API
+     * @default process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+     */
+    baseUrl?: string;
 
-  /**
-   * JWT token for authentication
-   * If provided, will be included in Authorization header
-   */
-  token?: string;
+    /**
+     * JWT token for authentication
+     * If provided, will be included in Authorization header
+     */
+    token?: string;
 
-  /**
-   * Custom headers to include in all requests
-   */
-  headers?: HeadersInit;
+    /**
+     * Custom headers to include in all requests
+     */
+    headers?: HeadersInit;
 }
 ```
 
@@ -147,19 +148,19 @@ const api = createApiClient();
 
 // With authentication
 const api = createApiClient({
-  token: 'your-jwt-token',
+    token: 'your-jwt-token',
 });
 
 // Custom base URL
 const api = createApiClient({
-  baseUrl: 'https://api.production.com',
+    baseUrl: 'https://api.production.com',
 });
 
 // Custom headers
 const api = createApiClient({
-  headers: {
-    'X-Custom-Header': 'value',
-  },
+    headers: {
+        'X-Custom-Header': 'value',
+    },
 });
 ```
 
@@ -199,14 +200,14 @@ const { data, error } = await api.GET('/api/me');
 // error: { error: string; code: string } | undefined
 
 if (data) {
-  console.log(data.user.id);            // string (UUID)
-  console.log(data.user.name);          // string
-  console.log(data.user.email);         // string (email format)
-  console.log(data.user.emailVerified); // boolean
-  console.log(data.user.image);         // string | null
-  console.log(data.user.role);          // string
-  console.log(data.user.createdAt);     // string (ISO 8601)
-  console.log(data.user.updatedAt);     // string (ISO 8601)
+    console.log(data.user.id); // string (UUID)
+    console.log(data.user.name); // string
+    console.log(data.user.email); // string (email format)
+    console.log(data.user.emailVerified); // boolean
+    console.log(data.user.image); // string | null
+    console.log(data.user.role); // string
+    console.log(data.user.createdAt); // string (ISO 8601)
+    console.log(data.user.updatedAt); // string (ISO 8601)
 }
 ```
 
@@ -228,13 +229,14 @@ const { data, error } = await api.GET('/api/users');
 // error: { error: string; code: string } | undefined
 
 if (data) {
-  data.users.forEach(user => {
-    console.log(user.email); // TypeScript knows the shape
-  });
+    data.users.forEach((user) => {
+        console.log(user.email); // TypeScript knows the shape
+    });
 }
 ```
 
 **Possible Errors:**
+
 - `401 Unauthorized` - No valid session or token provided
 - `403 Forbidden` - Admin role required
 
@@ -247,18 +249,18 @@ const { data, error } = await api.GET('/api/me');
 
 // TypeScript enforces checking before using
 if (error) {
-  // Handle error - TypeScript knows error shape from OpenAPI spec
-  switch (error.code) {
-    case 'UNAUTHORIZED':
-      redirect('/login');
-      break;
-    case 'FORBIDDEN':
-      redirect('/access-denied');
-      break;
-    default:
-      console.error('Unknown error:', error.error);
-  }
-  return;
+    // Handle error - TypeScript knows error shape from OpenAPI spec
+    switch (error.code) {
+        case 'UNAUTHORIZED':
+            redirect('/login');
+            break;
+        case 'FORBIDDEN':
+            redirect('/access-denied');
+            break;
+        default:
+            console.error('Unknown error:', error.error);
+    }
+    return;
 }
 
 // TypeScript knows data is defined here
@@ -270,6 +272,7 @@ console.log(data.user.email);
 ### Autocomplete
 
 Your IDE will autocomplete:
+
 - Available endpoints
 - Request body fields
 - Response fields
@@ -311,14 +314,14 @@ const { data, error } = await api.GET('/api/me');
 
 // TypeScript knows exactly one is defined
 if (error) {
-  error.error; // ✅ string
-  error.code;  // ✅ string
-  data;        // ❌ undefined
+    error.error; // ✅ string
+    error.code; // ✅ string
+    data; // ❌ undefined
 }
 
 if (data) {
-  data.user;   // ✅ User object
-  error;       // ❌ undefined
+    data.user; // ✅ User object
+    error; // ❌ undefined
 }
 ```
 
@@ -358,6 +361,7 @@ pnpm generate:client
 ```
 
 This script:
+
 1. Fetches the OpenAPI spec from your running API server
 2. Generates TypeScript types using `openapi-typescript`
 3. Saves them to `packages/@kit/api-client/src/generated/openapi.ts`
@@ -372,10 +376,10 @@ You can pass custom fetch options to any request:
 
 ```typescript
 const { data, error } = await api.GET('/api/me', {
-  // Custom fetch options
-  signal: abortController.signal,
-  cache: 'no-store',
-  next: { revalidate: 60 },
+    // Custom fetch options
+    signal: abortController.signal,
+    cache: 'no-store',
+    next: { revalidate: 60 },
 });
 ```
 
@@ -384,10 +388,10 @@ const { data, error } = await api.GET('/api/me', {
 ```typescript
 // When you add POST endpoints to your API, use them like this:
 const { data, error } = await api.POST('/api/posts', {
-  body: {
-    title: 'My Post',
-    content: 'Hello world',
-  },
+    body: {
+        title: 'My Post',
+        content: 'Hello world',
+    },
 });
 
 // TypeScript knows the exact shape of the body!
@@ -398,12 +402,12 @@ const { data, error } = await api.POST('/api/posts', {
 ```typescript
 // When you add query parameters to endpoints:
 const { data, error } = await api.GET('/api/posts', {
-  params: {
-    query: {
-      page: 1,
-      limit: 10,
+    params: {
+        query: {
+            page: 1,
+            limit: 10,
+        },
     },
-  },
 });
 ```
 
@@ -412,11 +416,11 @@ const { data, error } = await api.GET('/api/posts', {
 ```typescript
 // When you add path parameters:
 const { data, error } = await api.GET('/api/users/{id}', {
-  params: {
-    path: {
-      id: 'user-uuid',
+    params: {
+        path: {
+            id: 'user-uuid',
+        },
     },
-  },
 });
 ```
 
@@ -428,8 +432,8 @@ const { data, error } = await api.GET('/api/users/{id}', {
 const { data, error } = await api.GET('/api/me');
 
 if (error) {
-  // Handle error case
-  return;
+    // Handle error case
+    return;
 }
 
 // Now TypeScript knows data is defined
@@ -486,6 +490,7 @@ if (error) {
 **Problem:** TypeScript doesn't recognize new endpoints or fields.
 
 **Solution:** Regenerate the client types:
+
 ```bash
 pnpm generate:client
 ```
@@ -495,6 +500,7 @@ pnpm generate:client
 **Problem:** `pnpm generate:client` fails with ECONNREFUSED.
 
 **Solution:** Make sure the API server is running:
+
 ```bash
 pnpm --filter @kit/api dev
 ```

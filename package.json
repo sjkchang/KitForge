@@ -1,48 +1,52 @@
 {
-  "name": "@KitForge/root",
-  "version": "0.1.0",
-  "private": true,
-  "description": "SaaS Starter Kit - Production-ready TypeScript monorepo",
-  "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "test": "turbo test",
-    "test:unit": "turbo test:unit",
-    "test:integration": "turbo test:integration",
-    "test:e2e": "playwright test",
-    "lint": "turbo lint",
-    "lint:fix": "turbo lint:fix",
-    "typecheck": "turbo typecheck",
-    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
-    "db:generate": "pnpm --filter @kit/database generate",
-    "db:migrate": "pnpm --filter @kit/database migrate",
-    "db:studio": "pnpm --filter @kit/database studio",
-    "db:seed": "pnpm --filter @kit/api seed",
-    "generate:client": "tsx scripts/generate-client.ts",
-    "clean": "turbo clean && rm -rf node_modules",
-    "prepare": "husky"
-  },
-  "devDependencies": {
-    "@changesets/cli": "^2.27.9",
-    "@commitlint/cli": "^19.5.0",
-    "@commitlint/config-conventional": "^19.5.0",
-    "@playwright/test": "^1.48.0",
-    "husky": "^9.1.6",
-    "lint-staged": "^15.2.10",
-    "openapi-fetch": "^0.15.0",
-    "openapi-typescript": "^7.10.1",
-    "prettier": "^3.3.3",
-    "tsx": "^4.19.2",
-    "turbo": "^2.2.3",
-    "typescript": "^5.6.3"
-  },
-  "packageManager": "pnpm@9.12.1",
-  "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=9.0.0"
-  },
-  "dependencies": {
-    "dotenv": "^17.2.3"
-  }
+    "name": "@KitForge/root",
+    "version": "0.1.0",
+    "private": true,
+    "description": "SaaS Starter Kit - Production-ready TypeScript monorepo",
+    "scripts": {
+        "dev": "turbo dev",
+        "build": "turbo build",
+        "test": "turbo test",
+        "test:unit": "turbo test:unit",
+        "test:integration": "turbo test:integration",
+        "test:e2e": "playwright test",
+        "lint": "turbo lint",
+        "lint:fix": "turbo lint:fix",
+        "typecheck": "turbo typecheck",
+        "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+        "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
+        "db:generate": "pnpm --filter @kit/database generate",
+        "db:migrate": "pnpm --filter @kit/database migrate",
+        "db:studio": "pnpm --filter @kit/database studio",
+        "db:seed": "pnpm --filter @kit/api seed",
+        "generate:client": "tsx scripts/generate-client.ts",
+        "clean": "turbo clean && rm -rf node_modules",
+        "prepare": "husky"
+    },
+    "devDependencies": {
+        "@changesets/cli": "^2.27.9",
+        "@commitlint/cli": "^19.5.0",
+        "@commitlint/config-conventional": "^19.5.0",
+        "@playwright/test": "^1.48.0",
+        "@typescript-eslint/eslint-plugin": "^8.46.3",
+        "@typescript-eslint/parser": "^8.46.3",
+        "eslint": "^9.39.1",
+        "eslint-config-prettier": "^10.1.8",
+        "husky": "^9.1.6",
+        "lint-staged": "^15.2.10",
+        "openapi-fetch": "^0.15.0",
+        "openapi-typescript": "^7.10.1",
+        "prettier": "^3.3.3",
+        "tsx": "^4.19.2",
+        "turbo": "^2.2.3",
+        "typescript": "^5.6.3"
+    },
+    "packageManager": "pnpm@9.12.1",
+    "engines": {
+        "node": ">=20.0.0",
+        "pnpm": ">=9.0.0"
+    },
+    "dependencies": {
+        "dotenv": "^17.2.3"
+    }
 }

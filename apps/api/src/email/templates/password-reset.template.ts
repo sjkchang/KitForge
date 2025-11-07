@@ -1,22 +1,22 @@
 export interface PasswordResetTemplateParams {
-  userName: string;
-  resetUrl: string;
+    userName: string;
+    resetUrl: string;
 }
 
 export interface RenderedEmail {
-  html: string;
-  text: string;
+    html: string;
+    text: string;
 }
 
 /**
  * Render password reset template
  */
 export function renderPasswordReset(
-  params: PasswordResetTemplateParams
+    params: PasswordResetTemplateParams,
 ): RenderedEmail {
-  const { userName, resetUrl } = params;
+    const { userName, resetUrl } = params;
 
-  const html = `
+    const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,7 +89,7 @@ export function renderPasswordReset(
 </html>
   `.trim();
 
-  const text = `
+    const text = `
 Reset Your Password
 
 Hi${userName ? ` ${userName}` : ''},
@@ -104,5 +104,5 @@ This link will expire in 1 hour. If you didn't request a password reset, you can
 If you didn't request this password reset, please contact support immediately.
   `.trim();
 
-  return { html, text };
+    return { html, text };
 }

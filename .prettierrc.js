@@ -1,1 +1,8 @@
-module.exports = require('./packages/@kit/config/prettier');
+module.exports = {
+  semi: true,
+  trailingComma: 'all',
+  singleQuote: true,
+  printWidth: 80,
+  tabWidth: 4,
+  arrowParens: 'always',
+};

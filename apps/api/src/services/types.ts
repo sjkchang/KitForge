@@ -7,9 +7,9 @@ import type { EmailService } from '../email/email.service';
  * This provides type safety and autocomplete for getServices()
  */
 export interface Services {
-  email: EmailService;
-  // Future services will be added here:
-  // sms: SmsService;
-  // storage: StorageService;
-  // payment: PaymentService;
+    email: EmailService;
+    // Future services will be added here:
+    // sms: SmsService;
+    // storage: StorageService;
+    // payment: PaymentService;
 }
