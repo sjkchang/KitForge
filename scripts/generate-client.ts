@@ -3,13 +3,12 @@
  * Generate TypeScript client from OpenAPI spec
  *
  * This script:
- * 1. Starts the API server temporarily
- * 2. Fetches the OpenAPI spec from /openapi.json
+ * 1. Imports the Hono app directly (no server needed!)
+ * 2. Extracts the OpenAPI spec from the app definition
  * 3. Generates TypeScript types using openapi-typescript
- * 4. Shuts down the server
  */
 
-import { exec, spawn } from 'node:child_process';
+import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
@@ -19,8 +18,6 @@ const execAsync = promisify(exec);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WORKSPACE_ROOT = path.resolve(__dirname, '..');
-const API_PORT = process.env.API_PORT || 3001;
-const API_URL = `http://localhost:${API_PORT}`;
 const SPEC_PATH = path.join(
     WORKSPACE_ROOT,
     'packages/@kit/api-client/src/generated/openapi.json',
@@ -33,53 +30,39 @@ const TYPES_PATH = path.join(
 async function main() {
     console.log('🚀 Starting OpenAPI client generation...\n');
 
-    // Step 1: Start the API server
-    console.log('📡 Starting API server...');
-    const apiProcess = spawn('pnpm', ['--filter', '@kit/api', 'dev'], {
-        cwd: WORKSPACE_ROOT,
-        stdio: 'pipe',
-    });
-
-    // Wait for server to be ready by polling the health endpoint
-    let serverReady = false;
-    let attempts = 0;
-    const maxAttempts = 20;
-
-    while (!serverReady && attempts < maxAttempts) {
-        attempts++;
-        try {
-            const response = await fetch(`${API_URL}/health`);
-            if (response.ok) {
-                serverReady = true;
-            }
-        } catch (error) {
-            // Server not ready yet, wait and retry
-            await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-    }
-
-    if (!serverReady) {
-        apiProcess.kill();
-        throw new Error('API server did not start within 10 seconds');
-    }
-
-    console.log('✅ API server started\n');
-
     try {
-        // Step 2: Fetch the OpenAPI spec
-        console.log('📥 Fetching OpenAPI spec...');
-        const response = await fetch(`${API_URL}/openapi.json`);
+        // Step 1: Set up minimal env vars required for app import
+        // These are just stubs since we're only extracting the OpenAPI spec
+        process.env.DATABASE_URL =
+            process.env.DATABASE_URL ||
+            'postgresql://stub:stub@localhost:5432/stub';
+        process.env.BETTER_AUTH_SECRET =
+            process.env.BETTER_AUTH_SECRET ||
+            'stub-secret-key-for-openapi-generation-only-1234567890';
+
+        // Step 2: Import the app and extract the OpenAPI spec
+        console.log('📖 Extracting OpenAPI spec from app definition...');
+
+        // Import the Hono app
+        const appModule = await import('../apps/api/src/app.ts');
+        const app = appModule.default;
+
+        // Extract the OpenAPI spec from the Hono app
+        // Create a mock request to trigger the /openapi.json handler
+        const mockRequest = new Request('http://localhost:3001/openapi.json');
+        const response = await app.fetch(mockRequest);
 
         if (!response.ok) {
             throw new Error(
-                `Failed to fetch OpenAPI spec: ${response.statusText}`,
+                `Failed to extract OpenAPI spec: ${response.statusText}`,
             );
         }
 
         const spec = await response.json();
-        console.log('✅ OpenAPI spec fetched\n');
 
-        // Step 3: Save the spec to a file
+        console.log('✅ OpenAPI spec extracted\n');
+
+        // Step 2: Save the spec to a file
         console.log('💾 Saving OpenAPI spec...');
         await fs.mkdir(path.dirname(SPEC_PATH), { recursive: true });
         await fs.writeFile(SPEC_PATH, JSON.stringify(spec, null, 2), 'utf-8');
@@ -87,7 +70,7 @@ async function main() {
             `✅ Saved to ${path.relative(WORKSPACE_ROOT, SPEC_PATH)}\n`,
         );
 
-        // Step 4: Generate TypeScript types
+        // Step 3: Generate TypeScript types
         console.log('🔨 Generating TypeScript types...');
         await execAsync(
             `pnpm openapi-typescript ${SPEC_PATH} -o ${TYPES_PATH}`,
@@ -103,11 +86,6 @@ async function main() {
     } catch (error) {
         console.error('❌ Error generating client:', error);
         process.exit(1);
-    } finally {
-        // Step 5: Stop the API server
-        console.log('🛑 Stopping API server...');
-        apiProcess.kill();
-        console.log('✅ API server stopped\n');
     }
 }
 
