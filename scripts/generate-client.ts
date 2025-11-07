@@ -47,9 +47,9 @@ async function main() {
         const appModule = await import('../apps/api/src/app.ts');
         const app = appModule.default;
 
-        // Extract the OpenAPI spec from the Hono app
-        // Create a mock request to trigger the /openapi.json handler
-        const mockRequest = new Request('http://localhost:3001/openapi.json');
+        // Extract the OpenAPI spec by making a mock request
+        // This is necessary because app.doc() metadata is only available via the endpoint
+        const mockRequest = new Request('http://localhost/openapi.json');
         const response = await app.fetch(mockRequest);
 
         if (!response.ok) {
