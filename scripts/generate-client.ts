@@ -34,8 +34,7 @@ async function main() {
         // Step 1: Set up stub env vars for OpenAPI generation
         // Config validation requires these, but no actual connections are made
         process.env.DATABASE_URL =
-            process.env.DATABASE_URL ||
-            'postgresql://localhost:5432/stub_db';
+            process.env.DATABASE_URL || 'postgresql://localhost:5432/stub_db';
         process.env.BETTER_AUTH_SECRET =
             process.env.BETTER_AUTH_SECRET ||
             'stub-secret-for-openapi-generation-min-32-chars';

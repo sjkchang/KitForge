@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const UserSchema = z.object({
     id: z.string().describe('Unique identifier for the user (UUID v4)'),
     name: z.string().describe("User's full name"),
-    email: z.string().email().describe("User's email address (must be unique)"),
+    // BREAKING CHANGE: Removed email field
     emailVerified: z
         .boolean()
         .describe('Whether the user has verified their email address'),
