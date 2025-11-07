@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, type User as AuthUser } from '@/lib/auth-client';
+import { api } from '@kit/api-client';
 import {
   Card,
   CardContent,
@@ -24,6 +25,7 @@ interface User {
   name: string;
   email: string;
   emailVerified: boolean;
+  image: string | null;
   role: string;
   createdAt: string;
   updatedAt: string;
@@ -47,22 +49,18 @@ export default function UsersPage() {
       if (!session) return;
 
       try {
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-        // Get the session token from the authClient
-        const response = await fetch(`${apiUrl}/api/users`, {
-          headers: {
-            'Authorization': `Bearer ${session.session.token}`,
-          },
+        // Make type-safe API call with authentication
+        const { data, error } = await api.GET('/api/v1/users', {
+          headers: { Authorization: `Bearer ${session.session.token}` },
         });
 
-        if (!response.ok) {
+        if (error) {
           throw new Error('Failed to fetch users');
         }
 
-        const data = await response.json();
-        setUsers(data.users);
+        if (data) {
+          setUsers(data.users);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load users');
       } finally {

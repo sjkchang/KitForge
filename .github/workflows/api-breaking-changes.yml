@@ -1,0 +1,191 @@
+name: API Breaking Changes
+
+on:
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - 'packages/@kit/api-client/**'
+      - '.github/workflows/api-breaking-changes.yml'
+  workflow_dispatch:
+    inputs:
+      ignore_warnings:
+        description: 'Ignore warnings (allow WARN level changes)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  check-breaking-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # For PR comments
+      contents: read
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate current OpenAPI spec
+        run: pnpm generate:client
+
+      - name: Save current spec
+        run: |
+          cp packages/@kit/api-client/src/generated/openapi.json /tmp/current-openapi.json
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+
+      - name: Install dependencies (main branch)
+        working-directory: main-branch
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate main branch OpenAPI spec
+        working-directory: main-branch
+        run: pnpm generate:client
+
+      - name: Save main spec
+        run: |
+          cp main-branch/packages/@kit/api-client/src/generated/openapi.json /tmp/main-openapi.json
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Install oasdiff
+        run: go install github.com/oasdiff/oasdiff@latest
+
+      - name: Check for breaking changes
+        id: breaking
+        continue-on-error: true
+        run: |
+          echo "## 🔍 Checking for Breaking Changes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Run oasdiff and capture output
+          if oasdiff breaking /tmp/main-openapi.json /tmp/current-openapi.json --format markdown --fail-on ERR > breaking-changes.md 2>&1; then
+            echo "No breaking changes detected" >> $GITHUB_STEP_SUMMARY
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "Breaking changes detected" >> $GITHUB_STEP_SUMMARY
+            cat breaking-changes.md >> $GITHUB_STEP_SUMMARY
+            echo "result=breaking" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for warnings
+        id: warnings
+        if: steps.breaking.outputs.result != 'breaking'
+        continue-on-error: true
+        run: |
+          echo "## ⚠️ Checking for Warnings" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Check for warnings
+          if oasdiff breaking /tmp/main-openapi.json /tmp/current-openapi.json --format markdown --fail-on WARN > warnings.md 2>&1; then
+            echo "No warnings" >> $GITHUB_STEP_SUMMARY
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "Warnings detected" >> $GITHUB_STEP_SUMMARY
+            cat warnings.md >> $GITHUB_STEP_SUMMARY
+            echo "result=warnings" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR (Breaking Changes)
+        if: steps.breaking.outputs.result == 'breaking' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const breaking = fs.readFileSync('breaking-changes.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ Breaking API Changes Detected
+
+Your changes introduce **breaking changes** to the API that will break existing clients using \`@kit/api-client\`.
+
+${breaking}
+
+### Options:
+
+1. **Fix the breaking changes (recommended)**
+   - Make changes backward compatible
+   - Add new fields as optional
+   - Deprecate instead of removing
+
+2. **Version your API**
+   - Create \`/api/v2\` endpoints for breaking changes
+   - Keep \`/api/v1\` endpoints for existing clients
+   - Update API versioning strategy
+
+3. **If intentional:**
+   - Document why the breaking change is necessary
+   - Plan client migration strategy
+   - Consider major version bump
+
+**This PR will be blocked from merging until breaking changes are resolved.**`
+            });
+
+      - name: Comment on PR (Warnings)
+        if: steps.warnings.outputs.result == 'warnings' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const warnings = fs.readFileSync('warnings.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ⚠️ API Warnings Detected
+
+Your changes have potential compatibility concerns:
+
+${warnings}
+
+### Action Required:
+
+1. Review the warnings above
+2. If intentional, use workflow_dispatch with "Ignore warnings" to override
+3. Otherwise, consider making these changes backward compatible
+
+**This PR is blocked pending review. Use workflow_dispatch to override if needed.**`
+            });
+
+      - name: Fail on breaking changes
+        if: steps.breaking.outputs.result == 'breaking'
+        run: |
+          echo "❌ Breaking changes detected. PR blocked."
+          exit 1
+
+      - name: Fail on warnings (unless ignored)
+        if: steps.warnings.outputs.result == 'warnings' && github.event.inputs.ignore_warnings != 'true'
+        run: |
+          echo "⚠️ Warnings detected. Use workflow_dispatch with 'Ignore warnings' to override."
+          exit 1
+
+      - name: Success
+        if: steps.breaking.outputs.result == 'success' || steps.warnings.outputs.result == 'success'
+        run: |
+          echo "✅ No breaking changes or warnings detected!"
+          echo "API contract is maintained ✨"

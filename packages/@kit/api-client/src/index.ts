@@ -1,58 +1,99 @@
-import createClient from 'openapi-fetch';
+import createClient, { type Middleware } from 'openapi-fetch';
 import type { paths } from './generated/openapi';
 
-/**
- * Options for creating an API client
- */
-export interface ApiClientOptions {
-  /**
-   * Base URL for the API
-   * @default process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-   */
-  baseUrl?: string;
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const client = createClient<paths>({ baseUrl });
 
-  /**
-   * JWT token for authentication
-   * If provided, will be included in Authorization header
-   */
-  token?: string;
+// Internal token storage
+let authToken: string | null = null;
 
-  /**
-   * Custom headers to include in all requests
-   */
-  headers?: HeadersInit;
-}
+// Auth middleware to automatically add Bearer token to requests
+const authMiddleware: Middleware = {
+  async onRequest({ request }) {
+    if (authToken) {
+      request.headers.set('Authorization', `Bearer ${authToken}`);
+    }
+    return request;
+  },
+};
+
+// Register middleware
+client.use(authMiddleware);
 
 /**
- * Create a type-safe API client
+ * Default API client singleton
+ *
+ * Import and use directly - no need to call createApiClient()
  *
  * @example
  * ```ts
- * // Without auth
- * const api = createApiClient();
+ * import { api } from '@kit/api-client';
+ *
+ * // Public endpoint
  * const { data, error } = await api.GET('/health');
  *
- * // With auth
- * const api = createApiClient({ token: 'jwt-token' });
+ * // Authenticated endpoint - pass token per request
+ * const { data, error } = await api.GET('/api/me', {
+ *   headers: { Authorization: `Bearer ${token}` }
+ * });
+ *
+ * // Or set auth globally
+ * api.setAuth(token);
  * const { data, error } = await api.GET('/api/me');
  * ```
  */
-export function createApiClient(options: ApiClientOptions = {}) {
+export const api = Object.assign(client, {
+  /**
+   * Set authentication token for all subsequent requests
+   *
+   * @param token - JWT token (or null to clear)
+   */
+  setAuth(token: string | null) {
+    authToken = token;
+  },
+
+  /**
+   * Clear authentication token
+   */
+  clearAuth() {
+    authToken = null;
+  },
+});
+
+/**
+ * Create a new API client instance with custom configuration
+ *
+ * Only use this if you need multiple client instances or custom config.
+ * For most cases, use the default `api` export instead.
+ *
+ * @example
+ * ```ts
+ * import { createApiClient } from '@kit/api-client';
+ *
+ * const prodApi = createApiClient({
+ *   baseUrl: 'https://api.production.com',
+ *   token: 'jwt-token'
+ * });
+ * ```
+ */
+export function createApiClient(options: {
+  baseUrl?: string;
+  token?: string;
+  headers?: HeadersInit;
+} = {}) {
   const {
-    baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+    baseUrl: customBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
     token,
     headers = {},
   } = options;
 
-  const client = createClient<paths>({
-    baseUrl,
+  return createClient<paths>({
+    baseUrl: customBaseUrl,
     headers: {
       ...headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
-
-  return client;
 }
 
 /**

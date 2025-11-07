@@ -64,7 +64,46 @@ const healthRoute = createRoute({
             },
         },
     },
-});
+    'x-codeSamples': [
+        {
+            lang: 'TypeScript',
+            label: '@kit/api-client',
+            source: `import { createApiClient } from '@kit/api-client';
+
+const api = createApiClient();
+
+const { data, error } = await api.GET('/health');
+
+if (error) {
+  console.error('API is down');
+} else {
+  console.log('Status:', data.status);
+  console.log('Timestamp:', data.timestamp);
+}`,
+        },
+        {
+            lang: 'TypeScript',
+            label: 'Server Component',
+            source: `import { getPublicApiClient } from '@/lib/api';
+
+export default async function HealthPage() {
+  const api = getPublicApiClient();
+  const { data, error } = await api.GET('/health');
+
+  if (error || !data) {
+    return <div>API is down</div>;
+  }
+
+  return (
+    <div>
+      <p>Status: {data.status}</p>
+      <p>Last checked: {data.timestamp}</p>
+    </div>
+  );
+}`,
+        },
+    ],
+} as const);
 
 app.openapi(healthRoute, (c) => {
     return c.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -74,7 +113,7 @@ app.on(['POST', 'GET'], '/api/auth/**', (c) => auth.handler(c.req.raw));
 
 const getMeRoute = createRoute({
     method: 'get',
-    path: '/api/me',
+    path: '/api/v1/me',
     operationId: 'getCurrentUser',
     tags: ['User'],
     summary: 'Get current user',
@@ -122,9 +161,92 @@ Requires a valid Bearer token in the Authorization header.`,
             },
         },
     },
+    'x-codeSamples': [
+        {
+            lang: 'TypeScript',
+            label: '@kit/api-client',
+            source: `import { api } from '@kit/api-client';
+
+// Option 1: Pass token per request
+const { data, error } = await api.GET('/api/v1/me', {
+  headers: { Authorization: \`Bearer \${token}\` },
 });
 
-app.use('/api/me', jwtAuth);
+// Option 2: Set token globally
+api.setAuth(token);
+const { data, error } = await api.GET('/api/v1/me');
+
+if (error) {
+  console.error('Error:', error.error);
+} else {
+  console.log('User:', data.user.name);
+  console.log('Email:', data.user.email);
+  console.log('Role:', data.user.role);
+}`,
+        },
+        {
+            lang: 'TypeScript',
+            label: 'Server Component',
+            source: `import { api, getSessionToken } from '@/lib/api';
+import { redirect } from 'next/navigation';
+
+export default async function ProfilePage() {
+  const token = await getSessionToken();
+
+  const { data, error } = await api.GET('/api/v1/me', {
+    headers: { Authorization: \`Bearer \${token}\` },
+  });
+
+  if (error || !data) {
+    redirect('/login');
+  }
+
+  return (
+    <div>
+      <h1>{data.user.name}</h1>
+      <p>{data.user.email}</p>
+    </div>
+  );
+}`,
+        },
+        {
+            lang: 'TypeScript',
+            label: 'Client Component',
+            source: `'use client';
+
+import { api } from '@kit/api-client';
+import { useSession } from '@/lib/auth-client';
+import { useEffect, useState } from 'react';
+
+export function UserProfile() {
+  const { data: session } = useSession();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    if (!session) return;
+
+    const fetchUser = async () => {
+      const { data, error } = await api.GET('/api/v1/me', {
+        headers: { Authorization: \`Bearer \${session.session.token}\` },
+      });
+
+      if (!error && data) {
+        setUser(data.user);
+      }
+    };
+
+    fetchUser();
+  }, [session]);
+
+  if (!user) return <div>Loading...</div>;
+
+  return <div>Welcome, {user.name}</div>;
+}`,
+        },
+    ],
+} as const);
+
+app.use('/api/v1/me', jwtAuth);
 
 app.openapi(getMeRoute, (c) => {
     const user = c.get('user') as { id: string; name: string; email: string; emailVerified: boolean; image: string | null; role: string; createdAt: Date; updatedAt: Date };
@@ -133,7 +255,7 @@ app.openapi(getMeRoute, (c) => {
 
 const getUsersRoute = createRoute({
     method: 'get',
-    path: '/api/users',
+    path: '/api/v1/users',
     operationId: 'getAllUsers',
     tags: ['Admin'],
     summary: 'Get all users',
@@ -218,9 +340,109 @@ const getUsersRoute = createRoute({
             },
         },
     },
+    'x-codeSamples': [
+        {
+            lang: 'TypeScript',
+            label: '@kit/api-client',
+            source: `import { api } from '@kit/api-client';
+
+const { data, error } = await api.GET('/api/v1/users', {
+  headers: { Authorization: \`Bearer \${token}\` },
 });
 
-app.use('/api/users', jwtAuth, requireAdmin);
+if (error) {
+  if (error.code === 'FORBIDDEN') {
+    console.error('Admin access required');
+  } else {
+    console.error('Error:', error.error);
+  }
+} else {
+  console.log(\`Found \${data.users.length} users\`);
+  data.users.forEach(user => {
+    console.log(\`- \${user.name} (\${user.email})\`);
+  });
+}`,
+        },
+        {
+            lang: 'TypeScript',
+            label: 'Server Component',
+            source: `import { api, getSessionToken } from '@/lib/api';
+
+export default async function UsersPage() {
+  const token = await getSessionToken();
+
+  const { data, error } = await api.GET('/api/v1/users', {
+    headers: { Authorization: \`Bearer \${token}\` },
+  });
+
+  if (error) {
+    if (error.code === 'FORBIDDEN') {
+      return <div>Admin access required</div>;
+    }
+    return <div>Error loading users</div>;
+  }
+
+  return (
+    <div>
+      <h1>Users ({data.users.length})</h1>
+      <ul>
+        {data.users.map(user => (
+          <li key={user.id}>
+            {user.name} - {user.role}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}`,
+        },
+        {
+            lang: 'TypeScript',
+            label: 'Client Component',
+            source: `'use client';
+
+import { api } from '@kit/api-client';
+import { useSession } from '@/lib/auth-client';
+import { useEffect, useState } from 'react';
+
+export function UsersList() {
+  const { data: session } = useSession();
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!session) return;
+
+    const fetchUsers = async () => {
+      const { data, error } = await api.GET('/api/v1/users', {
+        headers: { Authorization: \`Bearer \${session.session.token}\` },
+      });
+
+      if (error) {
+        setError(error.error);
+      } else {
+        setUsers(data.users);
+      }
+    };
+
+    fetchUsers();
+  }, [session]);
+
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}`,
+        },
+    ],
+} as const);
+
+app.use('/api/v1/users', jwtAuth, requireAdmin);
 
 app.openapi(getUsersRoute, async (c) => {
     try {

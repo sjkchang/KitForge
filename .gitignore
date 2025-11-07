@@ -12,6 +12,9 @@ build/
 out/
 *.tsbuildinfo
 
+# Generated code
+packages/@kit/api-client/src/generated/
+
 # Testing
 coverage/
 .nyc_output/

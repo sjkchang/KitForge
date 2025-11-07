@@ -1,35 +1,41 @@
-import { createApiClient } from '@kit/api-client';
+import { api } from '@kit/api-client';
 import { authClient } from './auth-client';
 
 /**
- * Get the API client with the current user's JWT token
+ * Get the session token for authenticated API calls
+ *
+ * @returns JWT token or null if not authenticated
  *
  * @example
  * ```ts
- * const api = await getApiClient();
- * const { data, error } = await api.GET('/api/me');
+ * const token = await getSessionToken();
+ * if (token) {
+ *   const { data } = await api.GET('/api/me', {
+ *     headers: { Authorization: `Bearer ${token}` }
+ *   });
+ * }
  * ```
  */
-export async function getApiClient() {
+export async function getSessionToken(): Promise<string | null> {
   const session = await authClient.getSession();
-
-  return createApiClient({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
-    token: session?.data?.session?.token,
-  });
+  return session?.data?.session?.token ?? null;
 }
 
 /**
- * Get an unauthenticated API client (for public endpoints)
+ * Re-export the singleton API client for convenience
  *
  * @example
  * ```ts
- * const api = getPublicApiClient();
- * const { data, error } = await api.GET('/health');
+ * import { api } from '@/lib/api';
+ *
+ * // Public endpoint
+ * const { data } = await api.GET('/health');
+ *
+ * // Authenticated endpoint
+ * const token = await getSessionToken();
+ * const { data } = await api.GET('/api/me', {
+ *   headers: { Authorization: `Bearer ${token}` }
+ * });
  * ```
  */
-export function getPublicApiClient() {
-  return createApiClient({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
-  });
-}
+export { api };
