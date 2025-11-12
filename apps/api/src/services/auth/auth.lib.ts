@@ -3,8 +3,8 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { jwt, openAPI } from 'better-auth/plugins';
 import { createDatabase } from '@kit/database';
 import * as schema from '@kit/database/schema';
-import { services } from '../services/service-registry';
-import { config } from '../config';
+import { services } from '../service-registry';
+import { config } from '../../config';
 
 function createAuth() {
     const db = createDatabase(config.database.url);

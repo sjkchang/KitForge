@@ -1,4 +1,4 @@
-import type { EmailService } from '../email/email.service';
+import type { EmailService } from './email/email.service';
 
 /**
  * Services interface - defines all available services

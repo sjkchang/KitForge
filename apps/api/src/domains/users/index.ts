@@ -1,6 +1,9 @@
 import { createDatabase, type Database } from '@kit/database';
 import { UserRepository } from './user.repository';
-import { config } from '../config';
+import { config } from '../../config';
+
+// Re-export entity types
+export { UserEntity, type User } from './user.entity';
 
 // Singleton database instance
 let db: Database | null = null;

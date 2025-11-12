@@ -1,6 +1,6 @@
 import { Context, Next } from 'hono';
-import { auth } from '../lib/auth';
-import { getUserRepository } from '../repositories';
+import { auth } from './auth.lib';
+import { getUserRepository } from '../../domains/users';
 
 /**
  * Middleware to validate JWT tokens and attach user to context

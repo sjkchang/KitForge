@@ -1,6 +1,6 @@
 import { ServiceRegistry } from './registry';
 import type { Services } from './types';
-import { EmailService } from '../email/email.service';
+import { EmailService } from './email/email.service';
 import { config } from '../config';
 
 // Global registry instance

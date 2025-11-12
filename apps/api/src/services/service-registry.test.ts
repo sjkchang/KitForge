@@ -6,7 +6,7 @@ import {
     resetServices,
     getRegistry,
 } from './service-registry';
-import { EmailService } from '../email/email.service';
+import { EmailService } from './email/email.service';
 import { setTestConfig, resetTestConfig } from '../config/config.test-helpers';
 
 describe('Service Registry Integration', () => {

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { Database } from '@kit/database';
 import { user as userTable } from '@kit/database/schema';
-import { UserEntity, type User } from '../entities/user.entity';
+import { UserEntity, type User } from './user.entity';
 
 /**
  * User Repository - Handles all user data access

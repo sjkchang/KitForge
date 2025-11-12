@@ -1,5 +1,5 @@
 import 'hono';
-import type { User } from '../entities/user.entity';
+import type { User } from '../domains/users';
 
 declare module 'hono' {
     interface ContextVariableMap {
