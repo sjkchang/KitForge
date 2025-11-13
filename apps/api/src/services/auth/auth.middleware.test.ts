@@ -1,6 +1,4 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Hono } from 'hono';
-import type { Context } from 'hono';
 
 describe('Auth Middleware', () => {
     describe('authorization header parsing', () => {
