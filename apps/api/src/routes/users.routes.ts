@@ -3,12 +3,14 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { jwtAuth, requireAdmin } from '../services/auth';
 import { getUserRepository } from '../domains/users';
 import {
-    GetMeResponseSchema,
-    GetUsersResponseSchema,
     UnauthorizedErrorSchema,
     ForbiddenErrorSchema,
     ErrorResponseSchema,
 } from '../schemas';
+import {
+    GetMeResponseSchema,
+    GetUsersResponseSchema,
+} from './users.schemas';
 
 export const usersRoutes: FastifyPluginAsync = async (app) => {
     const typedApp = app.withTypeProvider<ZodTypeProvider>();

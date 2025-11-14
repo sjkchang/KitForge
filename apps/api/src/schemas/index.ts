@@ -1,4 +1,3 @@
-// Export all validation schemas
+// Export core domain models and shared schemas
 export * from './user';
-export * from './health';
 export * from './error';

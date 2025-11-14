@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+/**
+ * Core User domain model
+ * This is the central user schema used across the application
+ */
 export const UserSchema = z.object({
     id: z.string().describe('Unique identifier for the user (UUID v4)'),
     name: z.string().describe("User's full name"),
@@ -23,11 +27,3 @@ export const UserSchema = z.object({
 });
 
 export type User = z.infer<typeof UserSchema>;
-
-export const GetMeResponseSchema = z.object({
-    user: UserSchema.describe('Current authenticated user'),
-});
-
-export const GetUsersResponseSchema = z.object({
-    users: z.array(UserSchema).describe('Array of all users in the system'),
-});
