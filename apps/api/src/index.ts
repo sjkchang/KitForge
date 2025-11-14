@@ -5,8 +5,21 @@ import { healthRoutes } from './routes/health.routes';
 import { usersRoutes } from './routes/users.routes';
 import { authRoutes } from './routes/auth.routes';
 import { auth } from './services/auth';
+import { healthService } from './health';
 
 async function start() {
+    // Run startup health checks
+    // This will validate configuration and check connectivity
+    // Application will start even if database is down (degraded mode)
+    // BUT will block startup if critical configuration is invalid (e.g., wrong auth secret)
+    try {
+        await healthService.runStartupChecks();
+    } catch (error) {
+        console.error('[startup] Critical configuration error - cannot start application');
+        console.error(error);
+        process.exit(1);
+    }
+
     const app = await buildApp();
 
     // Register routes
