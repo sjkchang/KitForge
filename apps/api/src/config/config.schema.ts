@@ -14,7 +14,12 @@ const EmailProviderSchema = z.discriminatedUnion('type', [
 ]);
 
 /**
- * Main configuration schema
+ * Application configuration schema
+ *
+ * Philosophy:
+ * - Validates that config values are well-formed (fail fast on invalid config)
+ * - Does NOT attempt connections (fail lazy when features are actually used)
+ * - Allows app to start even if database is unreachable (graceful degradation)
  */
 export const ConfigSchema = z.object({
     // Environment
@@ -26,12 +31,12 @@ export const ConfigSchema = z.object({
         url: z.string().url(),
     }),
 
-    // Database
+    // Database - URL validated but connection NOT attempted at startup
     database: z.object({
         url: z.string().url('DATABASE_URL must be a valid URL'),
     }),
 
-    // Auth
+    // Auth - Config validated but auth system starts even if DB is down
     auth: z.object({
         secret: z
             .string()
@@ -47,7 +52,7 @@ export const ConfigSchema = z.object({
         }),
     }),
 
-    // Email
+    // Email - Works offline with console provider
     email: z.object({
         from: z.string().email(),
         provider: EmailProviderSchema,
@@ -61,4 +66,4 @@ export const ConfigSchema = z.object({
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
-export type EmailProvider = Config['email']['provider'];
+export type EmailProvider = z.infer<typeof EmailProviderSchema>;

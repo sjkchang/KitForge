@@ -2,7 +2,7 @@
 
 **Purpose:** This document provides comprehensive context and working guidelines for Claude Code across all sessions. Read this carefully before starting any work.
 
-**Last Updated:** 2025-10-23
+**Last Updated:** 2025-11-11
 
 ---
 
@@ -136,7 +136,15 @@ kit/
 ├── apps/
 │   ├── api/          # Hono backend (HTTP + OpenAPI)
 │   │   └── src/
-│   │       └── schemas/     # Backend Zod schemas for OpenAPI
+│   │       ├── routes/          # Business/app-specific routes
+│   │       ├── schemas/         # Core OpenAPI schemas
+│   │       ├── domains/         # Business domains
+│   │       │   └── users/       # User management domain
+│   │       ├── services/        # Reusable technical services
+│   │       │   ├── auth/        # Authentication service
+│   │       │   └── email/       # Email service
+│   │       ├── config/          # Configuration management
+│   │       └── types/           # TypeScript definitions
 │   ├── web/          # Next.js frontend (App Router)
 │   └── marketing/    # Astro marketing site
 ├── packages/
@@ -148,12 +156,15 @@ kit/
 ├── docs/            # All documentation
 │   ├── REQUIREMENTS.md
 │   ├── ARCHITECTURE.md
+│   ├── API-STRUCTURE.md     # Detailed API organization (NEW)
 │   ├── DEVELOPMENT.md (to be created)
 │   ├── TESTING.md (to be created)
 │   └── decisions/   # ADRs
 ├── tests/           # E2E tests
 └── scripts/         # Build/deploy scripts
 ```
+
+**Important:** For detailed API structure, organization patterns, and future expansion guidelines, see **[docs/API-STRUCTURE.md](docs/API-STRUCTURE.md)**.
 
 ---
 
@@ -488,7 +499,7 @@ Optional (with defaults):
 **Entities (Source of Truth):**
 
 ```typescript
-// apps/api/src/entities/user.entity.ts
+// apps/api/src/domains/users/user.entity.ts
 import { z } from 'zod';
 
 export const UserEntity = z.object({
@@ -506,8 +517,8 @@ export type User = z.infer<typeof UserEntity>;
 **Repositories (MUST validate against entities):**
 
 ```typescript
-// apps/api/src/repositories/user.repository.ts
-export class DrizzleUserRepository {
+// apps/api/src/domains/users/user.repository.ts
+export class UserRepository {
     constructor(private db: Database) {}
 
     async findById(id: string): Promise<User | null> {
@@ -659,7 +670,7 @@ git checkout -b feature/user-authentication
 **3. Write test first (TDD):**
 
 ```typescript
-// apps/api/src/repositories/user.repository.test.ts
+// apps/api/src/domains/users/user.repository.test.ts
 describe('UserRepository', () => {
     it('should create user with hashed password', async () => {
         const user = await userRepo.create({
@@ -676,7 +687,7 @@ describe('UserRepository', () => {
 **4. Implement to pass test:**
 
 ```typescript
-// apps/api/src/repositories/user.repository.ts
+// apps/api/src/domains/users/user.repository.ts
 async create(data: CreateUserData): Promise<User> {
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -695,8 +706,8 @@ async create(data: CreateUserData): Promise<User> {
 **5. Commit (granular, focused):**
 
 ```bash
-git add apps/api/src/repositories/user.repository.ts
-git add apps/api/src/repositories/user.repository.test.ts
+git add apps/api/src/domains/users/user.repository.ts
+git add apps/api/src/domains/users/user.repository.test.ts
 git commit -m "feat(api): add password hashing to user creation"
 ```
 
@@ -921,27 +932,30 @@ tests/
 
 ### Pattern: Adding a New Entity
 
+**Note:** See [docs/API-STRUCTURE.md](docs/API-STRUCTURE.md) for complete guidelines on services vs domains.
+
 ```bash
-# 1. Create entity
-# apps/api/src/entities/post.entity.ts
+# 1. Create domain directory
+mkdir -p apps/api/src/domains/posts
 
-# 2. Create validation schemas
-# packages/validation/src/post.ts
+# 2. Create entity
+# apps/api/src/domains/posts/post.entity.ts
 
-# 3. Create database schema
+# 3. Create validation schemas
+# apps/api/src/schemas/post.ts (if core domain)
+# OR apps/api/src/domains/posts/post.schema.ts (if domain-specific)
+
+# 4. Create database schema
 # packages/database/src/schema/posts.ts
 
-# 4. Generate migration
+# 5. Generate migration
 pnpm db:generate
 
-# 5. Create repository (with in-memory version)
-# apps/api/src/repositories/post.repository.ts
-
-# 6. Create service (optional, if business logic)
-# apps/api/src/services/post.service.ts
+# 6. Create repository
+# apps/api/src/domains/posts/post.repository.ts
 
 # 7. Create routes
-# apps/api/src/routes/posts.ts
+# apps/api/src/routes/posts.routes.ts
 
 # 8. Write tests for each layer
 # *.test.ts files

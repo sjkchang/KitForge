@@ -31,14 +31,13 @@ async function main() {
     console.log('🚀 Starting OpenAPI client generation...\n');
 
     try {
-        // Step 1: Set up minimal env vars required for app import
-        // These are just stubs since we're only extracting the OpenAPI spec
+        // Step 1: Set up stub env vars for OpenAPI generation
+        // Config validation requires these, but no actual connections are made
         process.env.DATABASE_URL =
-            process.env.DATABASE_URL ||
-            'postgresql://stub:stub@localhost:5432/stub';
+            process.env.DATABASE_URL || 'postgresql://localhost:5432/stub_db';
         process.env.BETTER_AUTH_SECRET =
             process.env.BETTER_AUTH_SECRET ||
-            'stub-secret-key-for-openapi-generation-only-1234567890';
+            'stub-secret-for-openapi-generation-min-32-chars';
 
         // Step 2: Import the app and extract the OpenAPI spec
         console.log('📖 Extracting OpenAPI spec from app definition...');
@@ -47,9 +46,9 @@ async function main() {
         const appModule = await import('../apps/api/src/app.ts');
         const app = appModule.default;
 
-        // Extract the OpenAPI spec from the Hono app
-        // Create a mock request to trigger the /openapi.json handler
-        const mockRequest = new Request('http://localhost:3001/openapi.json');
+        // Extract the OpenAPI spec by making a mock request
+        // This is necessary because app.doc() metadata is only available via the endpoint
+        const mockRequest = new Request('http://localhost/openapi.json');
         const response = await app.fetch(mockRequest);
 
         if (!response.ok) {

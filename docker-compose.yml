@@ -5,6 +5,11 @@ services:
     image: postgres:16-alpine
     container_name: kit_postgres
     restart: unless-stopped
+    # Load environment variables from centralized env files
+    env_file:
+      - env/.env.global
+      - path: env/.env.local  # Optional - gitignored local overrides
+        required: false
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
