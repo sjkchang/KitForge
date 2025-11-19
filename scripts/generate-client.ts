@@ -39,6 +39,10 @@ async function main() {
             process.env.BETTER_AUTH_SECRET ||
             'stub-secret-for-openapi-generation-min-32-chars';
 
+        // Use JSON logging in scripts to avoid pino-pretty worker thread issues
+        process.env.LOG_FORMAT = 'json';
+        process.env.LOG_LEVEL = 'silent';
+
         // Step 2: Import the app and extract the OpenAPI spec
         console.log('📖 Extracting OpenAPI spec from app definition...');
 

@@ -54,7 +54,7 @@ export const ConfigSchema = z.object({
 
     // Logging
     logging: z.object({
-        level: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']),
+        level: z.enum(['silent', 'trace', 'debug', 'info', 'warn', 'error', 'fatal']),
         format: z.enum(['json', 'pretty']),
     }),
 
