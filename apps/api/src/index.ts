@@ -1,4 +1,5 @@
 import '@kit/env'; // Load environment variables
+import { logger } from './services/logger';
 import { buildApp } from './app';
 import { config } from './config';
 import { healthRoutes } from './routes/health.routes';
@@ -15,8 +16,7 @@ async function start() {
     try {
         await healthService.runStartupChecks();
     } catch (error) {
-        console.error('[startup] Critical configuration error - cannot start application');
-        console.error(error);
+        logger.error({ err: error }, 'Critical configuration error - cannot start application');
         process.exit(1);
     }
 
@@ -84,27 +84,38 @@ async function start() {
                 };
             }
         } catch (error) {
-            console.error('Failed to merge Better Auth OpenAPI schema:', error);
+            logger.error({ err: error }, 'Failed to merge Better Auth OpenAPI schema');
         }
     }
 
     try {
         await app.listen({ port: config.app.port, host: '0.0.0.0' });
 
-        console.log(`🚀 Server started on http://localhost:${config.app.port}`);
-        console.log(
-            `📦 Better Auth endpoints available at http://localhost:${config.app.port}/api/auth/*`,
+        logger.info(
+            {
+                port: config.app.port,
+                url: `http://localhost:${config.app.port}`,
+                env: config.env,
+            },
+            'Server started',
         );
+
+        logger.info(
+            { url: `http://localhost:${config.app.port}/api/auth/*` },
+            'Better Auth endpoints available',
+        );
+
         if (config.openapi.enabled) {
-            console.log(
-                `📚 API documentation available at http://localhost:${config.app.port}/docs`,
-            );
-            console.log(
-                `📄 OpenAPI spec available at http://localhost:${config.app.port}/docs/json`,
+            logger.info(
+                {
+                    docsUrl: `http://localhost:${config.app.port}/docs`,
+                    specUrl: `http://localhost:${config.app.port}/docs/json`,
+                },
+                'API documentation available',
             );
         }
     } catch (err) {
-        app.log.error(err);
+        logger.error({ err }, 'Failed to start server');
         process.exit(1);
     }
 }

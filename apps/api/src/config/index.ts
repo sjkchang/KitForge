@@ -57,6 +57,11 @@ function loadConfig(): Config {
             },
         },
 
+        logging: {
+            level: (process.env.LOG_LEVEL as any) || (env === 'development' ? 'debug' : 'info'),
+            format: (process.env.LOG_FORMAT as any) || (env === 'development' ? 'pretty' : 'json'),
+        },
+
         email: {
             from: process.env.EMAIL_FROM || 'noreply@localhost.com',
             provider: emailProvider,

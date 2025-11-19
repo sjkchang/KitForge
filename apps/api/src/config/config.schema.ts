@@ -52,6 +52,12 @@ export const ConfigSchema = z.object({
         }),
     }),
 
+    // Logging
+    logging: z.object({
+        level: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']),
+        format: z.enum(['json', 'pretty']),
+    }),
+
     // Email - Works offline with console provider
     email: z.object({
         from: z.string().email(),

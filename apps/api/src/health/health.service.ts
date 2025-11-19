@@ -1,4 +1,5 @@
 import { createDatabase } from '@kit/database';
+import { logger } from '../services/logger';
 import { config } from '../config';
 import { auth } from '../services/auth';
 
@@ -36,7 +37,7 @@ class HealthService {
      * This allows the app to start even if DB is down
      */
     async runStartupChecks(): Promise<void> {
-        console.log('[health] Running startup health checks...');
+        logger.info('Running startup health checks');
 
         // Check database connectivity (non-blocking)
         await this.checkDatabase();
@@ -47,11 +48,11 @@ class HealthService {
         // Log overall status
         const overallStatus = this.getOverallStatus();
         if (overallStatus === 'healthy') {
-            console.log('[health] ✅ All systems healthy');
+            logger.info('All systems healthy');
         } else if (overallStatus === 'degraded') {
-            console.warn('[health] ⚠️  System degraded - some features may be unavailable');
+            logger.warn('System degraded - some features may be unavailable');
         } else {
-            console.error('[health] ❌ System unhealthy - critical features unavailable');
+            logger.error('System unhealthy - critical features unavailable');
         }
     }
 
@@ -69,15 +70,17 @@ class HealthService {
             this.dbMessage = 'Connected';
             this.dbConnectedAt = new Date().toISOString();
 
-            console.log('[health] ✅ Database: Connected');
+            logger.info('Database connected');
         } catch (error) {
             this.dbStatus = 'unhealthy';
             this.dbMessage = error instanceof Error ? error.message : 'Connection failed';
             this.dbConnectedAt = undefined;
 
-            console.error('[health] ❌ Database: Connection failed -', this.dbMessage);
-            console.error('[health]    Application will start in degraded mode');
-            console.error('[health]    Features requiring database will be unavailable');
+            logger.error(
+                { dbMessage: this.dbMessage },
+                'Database connection failed - application will start in degraded mode',
+            );
+            logger.warn('Features requiring database will be unavailable');
         }
     }
 
@@ -95,7 +98,7 @@ class HealthService {
             this.authMessage = 'Configuration valid';
             this.authValidatedAt = new Date().toISOString();
 
-            console.log('[health] ✅ Auth: Configuration valid');
+            logger.info('Auth configuration valid');
         } catch (error) {
             this.authStatus = 'unhealthy';
 
@@ -104,19 +107,19 @@ class HealthService {
             if (errorMessage.includes('Failed to decrypt private key')) {
                 this.authMessage = 'BETTER_AUTH_SECRET mismatch - cannot decrypt JWKS. Clear database JWKS table or use correct secret.';
 
-                console.error('[health] ❌ Auth: BETTER_AUTH_SECRET mismatch');
-                console.error('[health]    The current BETTER_AUTH_SECRET does not match the one used to encrypt JWKS');
-                console.error('[health]    To fix:');
-                console.error('[health]    1. Use the original BETTER_AUTH_SECRET, OR');
-                console.error('[health]    2. Clear the JWKS table in the database');
-                console.error('[health]');
-                console.error('[health]    ⛔ APPLICATION STARTUP BLOCKED - Fix auth configuration to continue');
+                logger.error('BETTER_AUTH_SECRET mismatch - APPLICATION STARTUP BLOCKED');
+                logger.error(
+                    'The current BETTER_AUTH_SECRET does not match the one used to encrypt JWKS',
+                );
+                logger.info(
+                    'To fix: 1) Use the original BETTER_AUTH_SECRET, OR 2) Clear the JWKS table in the database',
+                );
 
                 // This is a critical error - we should not start the app
                 throw new Error('Critical auth configuration error - startup blocked');
             } else {
                 this.authMessage = `Configuration error: ${errorMessage}`;
-                console.error('[health] ❌ Auth: Configuration error -', this.authMessage);
+                logger.error({ authMessage: this.authMessage }, 'Auth configuration error');
             }
 
             this.authValidatedAt = undefined;
