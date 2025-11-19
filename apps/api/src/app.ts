@@ -10,10 +10,11 @@ import {
 } from 'fastify-type-provider-zod';
 import { config, PROJECT_CONSTANTS } from './config';
 import { auth } from './services/auth';
+import { loggerOptions } from './services/logger';
 
 export async function buildApp() {
     const app = Fastify({
-        logger: config.env === 'development',
+        logger: loggerOptions,
     }).withTypeProvider<ZodTypeProvider>();
 
     // Set up Zod validator and serializer

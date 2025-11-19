@@ -39,25 +39,22 @@ async function main() {
             process.env.BETTER_AUTH_SECRET ||
             'stub-secret-for-openapi-generation-min-32-chars';
 
+        // Use JSON logging in scripts to avoid pino-pretty worker thread issues
+        process.env.LOG_FORMAT = 'json';
+        process.env.LOG_LEVEL = 'silent';
+
         // Step 2: Import the app and extract the OpenAPI spec
         console.log('📖 Extracting OpenAPI spec from app definition...');
 
-        // Import the Hono app
-        const appModule = await import('../apps/api/src/app.ts');
-        const app = appModule.default;
+        // Import the Fastify app
+        const { buildApp } = await import('../apps/api/src/app.ts');
+        const app = await buildApp();
 
-        // Extract the OpenAPI spec by making a mock request
-        // This is necessary because app.doc() metadata is only available via the endpoint
-        const mockRequest = new Request('http://localhost/openapi.json');
-        const response = await app.fetch(mockRequest);
+        // Wait for Fastify to be ready (required for swagger())
+        await app.ready();
 
-        if (!response.ok) {
-            throw new Error(
-                `Failed to extract OpenAPI spec: ${response.statusText}`,
-            );
-        }
-
-        const spec = await response.json();
+        // Extract the OpenAPI spec using Fastify's swagger method
+        const spec = app.swagger();
 
         console.log('✅ OpenAPI spec extracted\n');
 

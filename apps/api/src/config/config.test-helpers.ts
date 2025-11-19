@@ -48,6 +48,10 @@ export function setTestConfig(overrides?: Partial<Config>): void {
                 url: 'http://localhost:3000',
             },
         },
+        logging: {
+            level: 'debug',
+            format: 'pretty',
+        },
         email: {
             from: 'test@example.com',
             provider: { type: 'console' },

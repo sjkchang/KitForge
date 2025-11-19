@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { logger } from '../../logger';
 import type {
     EmailProvider,
     SendEmailParams,
@@ -25,8 +26,10 @@ export class ResendEmailProvider implements EmailProvider {
                 text: params.text,
                 replyTo: params.replyTo,
             });
+
+            logger.info({ to: params.to, subject: params.subject }, 'Email sent successfully');
         } catch (error) {
-            console.error('Failed to send email via Resend:', error);
+            logger.error({ err: error }, 'Failed to send email via Resend');
             throw new Error('Failed to send email');
         }
     }
